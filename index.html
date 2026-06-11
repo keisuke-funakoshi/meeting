@@ -19,7 +19,9 @@
   --tag:#263347;--danger:#e05040;--success:#38b878;--orange:#ea580c;--green:#16a34a;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;height:100%;overflow:hidden;}
+.screen{overflow-y:auto;}
+#sDetail{overflow:hidden;}
 
 /* TOP NAV */
 #topNav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,19,24,.97);
@@ -34,6 +36,9 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 
 /* SCREENS */
 .screen{display:none;padding-top:58px;padding-bottom:88px;}
+#sDetail{display:none;padding-top:0;padding-bottom:0;flex-direction:column;}
+#sDetail.active{display:flex;}
+#detailScroll{flex:1;overflow-y:auto;padding-top:0;}
 .screen.active{display:block;}
 
 /* BOTTOM NAV */
@@ -211,7 +216,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 <body>
 
 <!-- HOME -->
-<div class="screen active" id="sHome">
+<div class="screen active" id="sHome" style="overflow-y:auto;height:100%;">
   <div style="margin:12px 14px 0" class="card">
     <div class="card-hdr">▸ 会議リスト</div>
     <div style="padding:8px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">
@@ -247,69 +252,78 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
     <button class="st-btn" id="stInprogress" onclick="setStatus('inprogress')">会議中</button>
     <button class="st-btn" id="stDone"       onclick="setStatus('done')">完了</button>
   </div>
-  <!-- tab bar -->
-  <div class="tab-bar" id="tabBar">
-    <button class="tab-btn active" onclick="showTab2('info')">◎ 基本情報</button>
-    <button class="tab-btn" onclick="showTab2('agenda')">≡ 議題</button>
-    <button class="tab-btn" onclick="showTab2('decision')">✓ 決定事項</button>
-    <button class="tab-btn" onclick="showTab2('action')">→ アクション</button>
-    <button class="tab-btn" id="imgTabBtn" onclick="showTab2('images')">🖼 画像</button>
-    <button class="tab-btn" onclick="showTab2('notes')">✦ メモ・AI</button>
-  </div>
-  <!-- tab contents -->
-  <div id="tabInfo">
-    <div style="margin:12px 14px 0" class="card">
+  <!-- 1ページスクロール形式 -->
+  <div id="detailScroll" style="overflow-y:auto;padding:12px 14px 100px;display:flex;flex-direction:column;gap:12px;flex:1;-webkit-overflow-scrolling:touch;">
+
+    <!-- 基本情報 -->
+    <div class="card">
+      <div class="sec-hdr"><span class="dot"></span>基本情報</div>
       <div class="meta-row"><span class="meta-icon">📅</span><span class="meta-key">日時</span>
         <input class="meta-val" id="dDate" type="datetime-local" style="color-scheme:dark" onchange="save()"></div>
       <div class="meta-row"><span class="meta-icon">📍</span><span class="meta-key">場所 / URL</span>
         <input class="meta-val" id="dLocation" type="text" placeholder="会議室A / Zoom…" oninput="save()"></div>
-      <div class="meta-row"><span class="meta-icon">👥</span><span class="meta-key">参加者</span>
+      <div class="meta-row" style="border-bottom:none"><span class="meta-icon">👥</span><span class="meta-key">参加者</span>
         <input class="meta-val" id="dAttendees" type="text" placeholder="山田, 鈴木, …（カンマ区切り）" oninput="save()"></div>
+      <div id="attendeeTagsWrap" style="padding:4px 14px 10px;display:flex;flex-wrap:wrap;gap:5px;"></div>
     </div>
-    <div id="attendeeTagsWrap" style="padding:0 14px 4px;display:flex;flex-wrap:wrap;gap:5px;"></div>
-  </div>
-  <div id="tabAgenda" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px">
-      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:monospace">AGENDA</span>
-      <button onclick="addItem('agendas')" style="font-size:12px;font-weight:700;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+
+    <!-- 議題 -->
+    <div class="card">
+      <div class="sec-hdr">
+        <span class="dot" style="background:#6366f1"></span>
+        <span>議題</span>
+        <button onclick="addItem('agendas')" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+      </div>
+      <div id="agendaList"></div>
     </div>
-    <div class="card" style="margin:0 14px" id="agendaList"></div>
-  </div>
-  <div id="tabDecision" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px">
-      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:monospace">DECISIONS</span>
-      <button onclick="addItem('decisions')" style="font-size:12px;font-weight:700;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+
+    <!-- 決定事項 -->
+    <div class="card">
+      <div class="sec-hdr">
+        <span class="dot" style="background:var(--green)"></span>
+        <span>決定事項</span>
+        <button onclick="addItem('decisions')" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 12px;background:var(--green);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+      </div>
+      <div id="decisionList"></div>
     </div>
-    <div class="card" style="margin:0 14px" id="decisionList"></div>
-  </div>
-  <div id="tabAction" style="display:none;padding:12px 14px 0">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:monospace">ACTIONS</span>
-      <button onclick="addAction()" style="font-size:12px;font-weight:700;padding:6px 14px;background:var(--orange);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+
+    <!-- アクション -->
+    <div class="card">
+      <div class="sec-hdr">
+        <span class="dot" style="background:var(--orange)"></span>
+        <span>アクション</span>
+        <button onclick="addAction()" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 12px;background:var(--orange);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+      </div>
+      <div id="actionList"></div>
     </div>
-    <div id="actionList"></div>
-  </div>
-  <div id="tabImages" style="display:none">
-    <div class="sec-hdr" style="margin-top:0">
-      <span class="dot" style="background:var(--muted)"></span>画像
-      <span style="margin-left:auto;display:flex;gap:4px">
-        <button class="size-btn active" id="szSm" onclick="setImgSize('sm')">小</button>
-        <button class="size-btn" id="szMd" onclick="setImgSize('md')">中</button>
-        <button class="size-btn" id="szLg" onclick="setImgSize('lg')">大</button>
-      </span>
+
+    <!-- メモ -->
+    <div class="card">
+      <div class="sec-hdr"><span class="dot" style="background:#94a3b8"></span>メモ</div>
+      <textarea class="fta" id="dNotes" placeholder="会議中のメモ、補足情報…" rows="5" oninput="save()"></textarea>
     </div>
-    <div class="paste-zone" id="pasteZone"
-      ondragover="event.preventDefault();this.classList.add('over')"
-      ondragleave="this.classList.remove('over')"
-      ondrop="handleDrop(event)">
-      📋 ここにドロップ、または <kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">⌘V</kbd> / <kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">Ctrl+V</kbd> でスクリーンショットを貼り付け
+
+    <!-- 画像 -->
+    <div class="card">
+      <div class="sec-hdr">
+        <span class="dot" style="background:var(--muted)"></span>
+        <span id="imgTabBtn">画像</span>
+        <span style="margin-left:auto;display:flex;gap:4px">
+          <button class="size-btn active" id="szSm" onclick="setImgSize('sm')">小</button>
+          <button class="size-btn" id="szMd" onclick="setImgSize('md')">中</button>
+          <button class="size-btn" id="szLg" onclick="setImgSize('lg')">大</button>
+        </span>
+      </div>
+      <div class="paste-zone" id="pasteZone"
+        ondragover="event.preventDefault();this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="handleDrop(event)">
+        📋 ドロップ / <kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">⌘V</kbd><kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">Ctrl+V</kbd> で貼り付け
+      </div>
+      <div class="img-grid sm" id="imgGrid"></div>
     </div>
-    <div class="img-grid sm" id="imgGrid"></div>
-  </div>
-  <div id="tabNotes" style="display:none;padding:12px 14px 0">
-    <textarea class="fta" id="dNotes" placeholder="会議中のメモ、補足情報…" rows="7"
-      style="background:var(--card);border-radius:12px;border:1px solid var(--border);min-height:120px" oninput="save()"></textarea>
-    <!-- AI Panel -->
+
+    <!-- AI -->
     <div class="ai-panel" id="aiPanel">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
         <span style="font-size:16px">✦</span>
@@ -334,11 +348,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
         </button>
       </div>
     </div>
+
+    <!-- アーカイブボタン -->
+    <button class="big-btn complete" onclick="archiveCurrent()" style="margin-top:4px">
+      ✅ &nbsp;この議事録をアーカイブに保存
+    </button>
+    <div style="height:8px"></div>
   </div>
 </div>
 
 <!-- ARCHIVE -->
-<div class="screen" id="sArchive">
+<div class="screen" id="sArchive" style="overflow-y:auto;height:100%;">
   <div style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <span style="font-family:monospace;font-size:13px;letter-spacing:3px;color:var(--muted);font-weight:700">ARCHIVE</span>
@@ -349,7 +369,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 </div>
 
 <!-- EXPORT -->
-<div class="screen" id="sExport">
+<div class="screen" id="sExport" style="overflow-y:auto;height:100%;">
   <div style="padding:14px">
     <div class="card" style="margin-bottom:12px">
       <div style="background:linear-gradient(135deg,var(--card),var(--card2));padding:16px;border-bottom:2px solid var(--accent)">
@@ -565,8 +585,14 @@ function openDetail(id){
   document.getElementById('dNotes').value      = m.notes;
   renderAttendees();
   renderStatus();
-  showTab2('info');
+  renderItems('agendas');
+  renderItems('decisions');
+  renderActions();
+  renderPhotos();
   showDetail();
+  // スクロールトップ
+  var sc=document.getElementById('detailScroll');
+  if(sc) sc.scrollTop=0;
 }
 function save(){
   if(!currentId)return;
@@ -602,9 +628,10 @@ function renderStatus(){
     var el=document.getElementById(map[k]);
     el.className='st-btn'+(m.status===k?' '+cls[k]:'');
   });
-  // update img tab badge
+  // update img badge
   var imgs=m.images||[];
-  document.getElementById('imgTabBtn').textContent='🖼 画像'+(imgs.length?' '+imgs.length:'');
+  var iBtn=document.getElementById('imgTabBtn');
+  if(iBtn) iBtn.textContent='画像'+(imgs.length?' '+imgs.length+'枚':'');
 }
 
 // ===== ATTENDEE TAGS =====
@@ -622,29 +649,16 @@ function renderAttendees(){
   });
 }
 
-// ===== TAB2 (detail) =====
-function showTab2(name){
-  activeTab2=name;
-  var tabs=['info','agenda','decision','action','images','notes'];
-  var ids =['tabInfo','tabAgenda','tabDecision','tabAction','tabImages','tabNotes'];
-  ids.forEach(function(id){document.getElementById(id).style.display='none';});
-  var map={info:'tabInfo',agenda:'tabAgenda',decision:'tabDecision',action:'tabAction',images:'tabImages',notes:'tabNotes'};
-  if(map[name]) document.getElementById(map[name]).style.display='';
-  var btns=document.getElementById('tabBar').querySelectorAll('.tab-btn');
-  btns.forEach(function(b,i){b.classList.toggle('active',i===tabs.indexOf(name));});
-  if(name==='agenda')   renderItems('agendas');
-  if(name==='decision') renderItems('decisions');
-  if(name==='action')   renderActions();
-  if(name==='images')   renderPhotos();
-}
+// ===== TAB2 (legacy stub - no-op) =====
+function showTab2(name){ /* 1ページ形式のため不要 */ }
 
 // ===== ITEMS (agenda / decision) =====
 function addItem(field){
   if(!currentId)return;
   var m=getM(currentId);
   m[field].push({id:Date.now(),text:''});
-  saveDB();
   renderItems(field);
+  saveDB();
 }
 function renderItems(field){
   var m=getM(currentId);if(!m)return;
@@ -760,8 +774,10 @@ function handlePhotoFiles(files){
       m.images=m.images||[];
       m.images.push({src:dataUrl,comment:''});
       loaded++;
+      renderPhotos();   // 即時表示
+      renderStatus();
       if(loaded===files.length){
-        saveDB(function(){renderPhotos();renderStatus();toast('画像を追加しました（圧縮済）');});
+        saveDB(function(){toast('画像を追加しました（圧縮済）');});
       }
     });
   });
@@ -849,7 +865,9 @@ function shootPhoto(){
       var m=getM(currentId);if(!m)return;
       m.images=m.images||[];
       m.images.push({src:dataUrl,comment:''});
-      saveDB(function(){renderPhotos();renderStatus();toast('撮影しました');});
+      renderPhotos();
+      renderStatus();
+      saveDB(function(){toast('撮影しました');});
       closeCam();
     });
   },'image/jpeg',0.92);
@@ -869,7 +887,9 @@ window.addEventListener('paste',function(e){
       var m=getM(currentId);if(!m)return;
       m.images=m.images||[];
       m.images.push({src:dataUrl,comment:''});
-      saveDB(function(){renderPhotos();renderStatus();toast('スクリーンショットを追加しました');});
+      renderPhotos();
+      renderStatus();
+      saveDB(function(){toast('スクリーンショットを追加しました');});
     });
   });
 });
@@ -916,6 +936,25 @@ function appendAiResult(){
   m.notes=m.notes?(m.notes+'\n\n---\n'+text):text;
   document.getElementById('dNotes').value=m.notes;
   saveDB();toast('ノートに追記しました');
+}
+
+// ===== ARCHIVE CURRENT =====
+function archiveCurrent(){
+  if(!currentId)return;
+  save();
+  var m=getM(currentId);
+  if(!m)return;
+  if(!m.title){toast('会議名を入力してください','var(--danger)');return;}
+  if(!confirm('「'+(m.title)+'」をアーカイブに保存しますか？'))return;
+  var rep=JSON.parse(JSON.stringify(m));
+  rep.savedAt=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  archive.unshift(rep);
+  meetings=meetings.filter(function(x){return x.id!==currentId;});
+  currentId=null;
+  saveDB(function(){
+    toast('✅ アーカイブに保存しました！');
+    showScreen('archive');
+  });
 }
 
 // ===== ARCHIVE =====
