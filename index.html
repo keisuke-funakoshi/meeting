@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="MinuteFlow">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1318">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>MinuteFlow 議事録</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1318;--card:#1e2633;--card2:#232d3d;--border:#2a3748;
+  --accent:#6366f1;--accent2:#818cf8;--muted:#6a7d96;--text:#e8edf4;
+  --tag:#263347;--danger:#e05040;--success:#38b878;--orange:#ea580c;--green:#16a34a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;}
+
+/* TOP NAV */
+#topNav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(15,19,24,.97);
+  border-bottom:1px solid var(--border);padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{display:flex;align-items:center;gap:8px;}
+.nav-hex{width:26px;height:26px;background:var(--accent);
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:900;}
+.nav-title{font-family:monospace;font-size:17px;letter-spacing:2px;font-weight:700;}
+.nav-badge{background:var(--accent);color:#fff;font-weight:700;font-size:11px;border-radius:20px;padding:2px 8px;}
+
+/* SCREENS */
+.screen{display:none;padding-top:58px;padding-bottom:88px;}
+.screen.active{display:block;}
+
+/* BOTTOM NAV */
+#bottomNav{position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(15,19,24,.97);border-top:1px solid var(--border);display:flex;}
+.nav-tab{flex:1;padding:9px 2px;display:flex;flex-direction:column;align-items:center;
+  gap:2px;cursor:pointer;border:none;background:transparent;color:var(--muted);
+  transition:color .1s,background .1s;border-radius:8px;}
+.nav-tab.active{color:var(--accent);}
+.nav-tab:active{background:var(--card2);color:var(--accent);transform:scale(0.94);}
+.nav-tab-icon{font-size:18px;}
+.nav-tab-label{font-size:9px;}
+
+/* FAB */
+#fab{position:fixed;bottom:74px;right:16px;z-index:150;width:52px;height:52px;
+  border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:26px;
+  cursor:pointer;box-shadow:0 4px 20px rgba(99,102,241,.4);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .1s,box-shadow .1s;}
+#fab:active{transform:scale(0.88);box-shadow:0 2px 8px rgba(99,102,241,.2);}
+
+/* CARDS */
+.card{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;}
+.card-hdr{background:var(--card2);padding:9px 14px;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
+.sec-hdr{background:var(--card2);padding:8px 14px;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0;}
+
+/* META */
+.meta-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;}
+.meta-row:last-child{border-bottom:none;}
+.meta-icon{font-size:14px;min-width:20px;text-align:center;}
+.meta-key{font-size:11px;color:var(--muted);min-width:72px;}
+.meta-val{flex:1;background:transparent;border:none;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;outline:none;}
+.meta-val::placeholder{color:var(--border);}
+
+/* TEXTAREA */
+.fta{width:100%;background:transparent;border:none;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;
+  padding:10px 14px;resize:none;outline:none;min-height:72px;}
+.fta::placeholder{color:var(--border);}
+
+/* MEETING LIST */
+.m-item{background:var(--card);border-radius:14px;border:1px solid var(--border);
+  padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.m-info{flex:1;min-width:0;}
+.m-title{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.m-title.empty{color:var(--muted);font-style:italic;font-size:13px;}
+.m-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+.m-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.m-tag{font-size:10px;border-radius:4px;padding:2px 6px;}
+.m-thumb-row{display:flex;gap:3px;margin-top:5px;}
+.m-thumb{width:36px;height:36px;border-radius:5px;object-fit:cover;border:1px solid var(--border);}
+.m-thumb-more{width:36px;height:36px;border-radius:5px;background:var(--tag);
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);font-weight:700;}
+.status-badge{font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;letter-spacing:.04em;}
+
+/* DETAIL HDR */
+#detailHdr{position:sticky;top:0;z-index:100;background:rgba(15,19,24,.97);
+  border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.back-btn{width:34px;height:34px;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .1s;}
+.back-btn:active{transform:scale(0.9);background:var(--card2);}
+.del-btn{width:32px;height:32px;background:transparent;border:1px solid var(--border);
+  border-radius:10px;color:var(--muted);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .1s;}
+.del-btn:active{transform:scale(0.9);background:var(--danger);color:#fff;border-color:var(--danger);}
+#dTitle{flex:1;background:transparent;border:none;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;outline:none;}
+#dTitle::placeholder{color:var(--muted);}
+
+/* TABS */
+.tab-bar{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--card2);}
+.tab-btn{flex-shrink:0;padding:9px 14px;border:none;border-bottom:2.5px solid transparent;
+  background:none;color:var(--muted);cursor:pointer;font-size:12px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;white-space:nowrap;transition:all .15s;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* LIST ITEMS */
+.list-item{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid var(--border);background:var(--card);}
+.list-item:last-child{border-bottom:none;}
+.list-num{font-family:monospace;font-size:13px;color:var(--accent);font-weight:700;min-width:20px;text-align:center;}
+.list-input{flex:1;background:transparent;border:none;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;padding:2px 0;}
+.list-input::placeholder{color:var(--border);}
+.item-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;}
+
+/* ACTION ITEMS */
+.action-item{background:var(--card);border-radius:12px;border:1px solid var(--border);
+  border-left:3px solid var(--orange);padding:10px 12px;margin-bottom:8px;}
+.action-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.action-cb{width:18px;height:18px;accent-color:var(--orange);cursor:pointer;flex-shrink:0;}
+.action-sub{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-left:26px;}
+.sub-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:3px;display:block;}
+.sub-input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:6px;
+  padding:6px 8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;}
+.sub-input::placeholder{color:var(--muted);}
+
+/* IMAGE */
+.size-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:11px;cursor:pointer;}
+.size-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+.img-grid{display:grid;gap:6px;padding:10px;}
+.img-grid.sm{grid-template-columns:repeat(4,1fr);}
+.img-grid.md{grid-template-columns:repeat(3,1fr);}
+.img-grid.lg{grid-template-columns:repeat(2,1fr);}
+.img-wrap{position:relative;border-radius:8px;overflow:hidden;background:var(--tag);display:flex;flex-direction:column;}
+.img-wrap img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.img-del{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;
+  border-radius:50%;width:22px;height:22px;color:#fff;font-size:11px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;}
+.img-caption{width:100%;background:rgba(0,0,0,.5);border:none;border-top:1px solid rgba(255,255,255,.1);
+  color:#fff;font-size:10px;padding:4px 6px;outline:none;font-family:'Noto Sans JP',sans-serif;}
+.add-photo{border-radius:8px;border:2px dashed var(--border);background:transparent;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;color:var(--muted);font-size:11px;cursor:pointer;aspect-ratio:1;}
+.add-photo input{display:none;}
+.paste-zone{border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center;
+  color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;margin:10px;}
+.paste-zone.over{border-color:var(--accent);background:rgba(99,102,241,.08);color:var(--accent);}
+
+/* AI */
+.ai-panel{background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:14px;padding:16px;margin:10px;}
+.ai-mode-btn{font-size:11px;font-weight:700;padding:5px 10px;border-radius:16px;border:none;
+  cursor:pointer;background:rgba(255,255,255,.1);color:#fff;transition:all .15s;}
+.ai-mode-btn.active{background:#818cf8;}
+
+/* BUTTONS */
+.big-btn{width:100%;padding:14px;border-radius:14px;border:none;background:var(--accent);
+  color:#fff;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:1px;transition:transform .1s,opacity .1s;}
+.big-btn:active{transform:scale(0.96);opacity:.82;}
+.big-btn.green{background:var(--green);}
+.big-btn.gray{background:var(--card2);color:var(--muted);border:1px solid var(--border);}
+.big-btn.complete{background:linear-gradient(135deg,#4338ca,#6366f1);font-size:15px;padding:16px;
+  box-shadow:0 4px 20px rgba(99,102,241,.35);}
+
+/* STATUS */
+.st-btn{font-size:11px;padding:4px 10px;border-radius:14px;border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);cursor:pointer;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;transition:all .15s;}
+.st-btn.active-draft{border-color:#94a3b8;background:rgba(148,163,184,.15);color:#94a3b8;}
+.st-btn.active-inprogress{border-color:#3b82f6;background:rgba(59,130,246,.15);color:#60a5fa;}
+.st-btn.active-done{border-color:var(--green);background:rgba(22,163,74,.15);color:#4ade80;}
+
+/* ARCHIVE */
+.rep-item{background:var(--card);border-radius:14px;border:1px solid var(--border);
+  padding:14px;margin-bottom:10px;border-left:4px solid var(--success);}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-icon{font-size:44px;margin-bottom:12px;}
+.empty-text{font-size:13px;line-height:1.7;}
+
+/* TOAST */
+#toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--success);color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;
+  font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* CAMERA MODAL */
+#camModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;
+  flex-direction:column;align-items:center;justify-content:center;}
+#camModal.show{display:flex;}
+#camVideo{width:min(440px,94vw);border-radius:12px;background:#000;display:block;}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen active" id="sHome">
+  <div style="margin:12px 14px 0" class="card">
+    <div class="card-hdr">▸ 会議リスト</div>
+    <div style="padding:8px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">
+      <input id="searchInput" type="text" placeholder="会議名・参加者で検索…"
+        style="flex:1;background:transparent;border:none;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;"
+        oninput="renderList()">
+      <span style="font-size:11px;color:var(--muted)" id="listCount">0件</span>
+    </div>
+    <div style="display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);overflow-x:auto;">
+      <button class="m-tag status-badge" id="fAll"   onclick="setFilter('')"          style="background:rgba(99,102,241,.15);color:var(--accent2);border:none;cursor:pointer;">すべて</button>
+      <button class="m-tag status-badge" id="fDraft" onclick="setFilter('draft')"      style="background:rgba(148,163,184,.15);color:#94a3b8;border:none;cursor:pointer;">下書き</button>
+      <button class="m-tag status-badge" id="fProg"  onclick="setFilter('inprogress')" style="background:rgba(59,130,246,.15);color:#60a5fa;border:none;cursor:pointer;">会議中</button>
+      <button class="m-tag status-badge" id="fDone"  onclick="setFilter('done')"       style="background:rgba(22,163,74,.15);color:#4ade80;border:none;cursor:pointer;">完了</button>
+    </div>
+    <div id="mList"></div>
+  </div>
+  <div style="padding:16px 14px 4px">
+    <button class="big-btn complete" onclick="addMeeting()">＋ &nbsp;新しい議事録を作成</button>
+  </div>
+  <div style="height:12px"></div>
+</div>
+
+<!-- DETAIL -->
+<div class="screen" id="sDetail">
+  <div id="detailHdr">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <input id="dTitle" type="text" placeholder="会議名を入力…" oninput="save()">
+    <button class="del-btn" onclick="deleteCurrent()">🗑</button>
+  </div>
+  <!-- status -->
+  <div style="display:flex;gap:6px;padding:10px 14px;background:var(--card2);border-bottom:1px solid var(--border);">
+    <button class="st-btn" id="stDraft"      onclick="setStatus('draft')">下書き</button>
+    <button class="st-btn" id="stInprogress" onclick="setStatus('inprogress')">会議中</button>
+    <button class="st-btn" id="stDone"       onclick="setStatus('done')">完了</button>
+  </div>
+  <!-- tab bar -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" onclick="showTab2('info')">◎ 基本情報</button>
+    <button class="tab-btn" onclick="showTab2('agenda')">≡ 議題</button>
+    <button class="tab-btn" onclick="showTab2('decision')">✓ 決定事項</button>
+    <button class="tab-btn" onclick="showTab2('action')">→ アクション</button>
+    <button class="tab-btn" id="imgTabBtn" onclick="showTab2('images')">🖼 画像</button>
+    <button class="tab-btn" onclick="showTab2('notes')">✦ メモ・AI</button>
+  </div>
+  <!-- tab contents -->
+  <div id="tabInfo">
+    <div style="margin:12px 14px 0" class="card">
+      <div class="meta-row"><span class="meta-icon">📅</span><span class="meta-key">日時</span>
+        <input class="meta-val" id="dDate" type="datetime-local" style="color-scheme:dark" onchange="save()"></div>
+      <div class="meta-row"><span class="meta-icon">📍</span><span class="meta-key">場所 / URL</span>
+        <input class="meta-val" id="dLocation" type="text" placeholder="会議室A / Zoom…" oninput="save()"></div>
+      <div class="meta-row"><span class="meta-icon">👥</span><span class="meta-key">参加者</span>
+        <input class="meta-val" id="dAttendees" type="text" placeholder="山田, 鈴木, …（カンマ区切り）" oninput="save()"></div>
+    </div>
+    <div id="attendeeTagsWrap" style="padding:0 14px 4px;display:flex;flex-wrap:wrap;gap:5px;"></div>
+  </div>
+  <div id="tabAgenda" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px">
+      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:monospace">AGENDA</span>
+      <button onclick="addItem('agendas')" style="font-size:12px;font-weight:700;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+    </div>
+    <div class="card" style="margin:0 14px" id="agendaList"></div>
+  </div>
+  <div id="tabDecision" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px">
+      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:monospace">DECISIONS</span>
+      <button onclick="addItem('decisions')" style="font-size:12px;font-weight:700;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+    </div>
+    <div class="card" style="margin:0 14px" id="decisionList"></div>
+  </div>
+  <div id="tabAction" style="display:none;padding:12px 14px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:monospace">ACTIONS</span>
+      <button onclick="addAction()" style="font-size:12px;font-weight:700;padding:6px 14px;background:var(--orange);color:#fff;border:none;border-radius:8px;cursor:pointer;">+ 追加</button>
+    </div>
+    <div id="actionList"></div>
+  </div>
+  <div id="tabImages" style="display:none">
+    <div class="sec-hdr" style="margin-top:0">
+      <span class="dot" style="background:var(--muted)"></span>画像
+      <span style="margin-left:auto;display:flex;gap:4px">
+        <button class="size-btn active" id="szSm" onclick="setImgSize('sm')">小</button>
+        <button class="size-btn" id="szMd" onclick="setImgSize('md')">中</button>
+        <button class="size-btn" id="szLg" onclick="setImgSize('lg')">大</button>
+      </span>
+    </div>
+    <div class="paste-zone" id="pasteZone"
+      ondragover="event.preventDefault();this.classList.add('over')"
+      ondragleave="this.classList.remove('over')"
+      ondrop="handleDrop(event)">
+      📋 ここにドロップ、または <kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">⌘V</kbd> / <kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">Ctrl+V</kbd> でスクリーンショットを貼り付け
+    </div>
+    <div class="img-grid sm" id="imgGrid"></div>
+  </div>
+  <div id="tabNotes" style="display:none;padding:12px 14px 0">
+    <textarea class="fta" id="dNotes" placeholder="会議中のメモ、補足情報…" rows="7"
+      style="background:var(--card);border-radius:12px;border:1px solid var(--border);min-height:120px" oninput="save()"></textarea>
+    <!-- AI Panel -->
+    <div class="ai-panel" id="aiPanel">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:16px">✦</span>
+        <span style="font-weight:800;font-size:14px;letter-spacing:-.02em">AI アシスタント</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="ai-mode-btn active" id="mSummary" onclick="setAiMode('summary')">✦ 要約を生成</button>
+        <button class="ai-mode-btn" id="mActions" onclick="setAiMode('actions')">◈ アクションを提案</button>
+        <button class="ai-mode-btn" id="mFormat" onclick="setAiMode('format')">❐ 議事録を整形</button>
+      </div>
+      <button onclick="runAI()" id="aiRunBtn"
+        style="width:100%;padding:10px;background:#818cf8;color:#fff;border:none;border-radius:10px;
+        font-weight:800;font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">
+        ✦ 要約を生成
+      </button>
+      <div id="aiResult" style="display:none;margin-top:12px;background:rgba(255,255,255,.08);border-radius:10px;padding:12px">
+        <pre id="aiResultText" style="margin:0;font-size:12px;line-height:1.7;color:#e0e7ff;white-space:pre-wrap;font-family:inherit"></pre>
+        <button onclick="appendAiResult()"
+          style="margin-top:8px;font-size:12px;font-weight:700;padding:6px 12px;background:#4f46e5;
+          color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'Noto Sans JP',sans-serif">
+          ノートに追記
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHIVE -->
+<div class="screen" id="sArchive">
+  <div style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <span style="font-family:monospace;font-size:13px;letter-spacing:3px;color:var(--muted);font-weight:700">ARCHIVE</span>
+      <span style="font-size:11px;color:var(--muted)" id="archiveCount">0件</span>
+    </div>
+    <div id="archiveList"></div>
+  </div>
+</div>
+
+<!-- EXPORT -->
+<div class="screen" id="sExport">
+  <div style="padding:14px">
+    <div class="card" style="margin-bottom:12px">
+      <div style="background:linear-gradient(135deg,var(--card),var(--card2));padding:16px;border-bottom:2px solid var(--accent)">
+        <div style="font-family:monospace;font-size:18px;letter-spacing:3px;font-weight:700;color:var(--accent)">MINUTE FLOW</div>
+        <div id="exportMeta" style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.8"></div>
+      </div>
+      <div id="exportList"></div>
+    </div>
+    <button class="big-btn" style="margin-bottom:8px" onclick="doPrint()">🖨 &nbsp;PDF印刷</button>
+    <button class="big-btn" style="margin-bottom:8px;background:var(--success)" onclick="doCSV()">📊 &nbsp;CSV出力</button>
+    <button class="big-btn" style="margin-bottom:8px;background:linear-gradient(135deg,#7c3aed,#4f1db5)" onclick="doZip()">🗜 &nbsp;画像をZIPダウンロード</button>
+    <div class="card" style="margin-bottom:8px;overflow:hidden">
+      <div class="card-hdr">💾 データバックアップ・復元</div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:11px;color:var(--muted);line-height:1.7">写真を含む全データをJSONで保存</div>
+        <button class="big-btn green" onclick="doBackup()">💾 &nbsp;全データをバックアップ（JSON）</button>
+        <label class="big-btn gray" style="cursor:pointer;justify-content:center">
+          📂 &nbsp;バックアップから復元
+          <input type="file" accept=".json" style="display:none" onchange="doRestore(this)">
+        </label>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.8;padding:0 8px">
+      PDF：印刷ダイアログで「PDFとして保存」を選択<br>
+      CSV：Excelで開けるデータ一覧
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA MODAL -->
+<div id="camModal">
+  <div style="width:min(440px,94vw);background:#0f1318;border-radius:18px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1e293b">
+      <span style="font-weight:800;color:#fff;font-size:14px">📷 カメラ撮影</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="flipCamera()" style="font-size:12px;padding:5px 10px;background:rgba(255,255,255,.1);color:#cbd5e1;border:none;border-radius:8px;cursor:pointer;font-weight:700">🔄 反転</button>
+        <button onclick="closeCam()" style="font-size:12px;padding:5px 10px;background:rgba(255,255,255,.1);color:#cbd5e1;border:none;border-radius:8px;cursor:pointer;font-weight:700">✕</button>
+      </div>
+    </div>
+    <video id="camVideo" autoplay playsinline muted style="width:100%;max-height:340px;background:#000;object-fit:cover;display:block"></video>
+    <div style="padding:14px;display:flex;justify-content:center">
+      <button id="camShoot" onclick="shootPhoto()"
+        style="width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid #64748b;cursor:pointer;
+        box-shadow:0 0 0 3px rgba(255,255,255,.2)"></button>
+    </div>
+  </div>
+</div>
+
+<button id="fab" onclick="addMeeting()">＋</button>
+
+<div id="bottomNav">
+  <button class="nav-tab active" id="tHome"    onclick="showScreen('home')"><span class="nav-tab-icon">📋</span><span class="nav-tab-label">議事録</span></button>
+  <button class="nav-tab"        id="tArchive" onclick="showScreen('archive')"><span class="nav-tab-icon">🗂</span><span class="nav-tab-label">アーカイブ</span></button>
+  <button class="nav-tab"        id="tExport"  onclick="showScreen('export')"><span class="nav-tab-icon">🖨</span><span class="nav-tab-label">出力</span></button>
+</div>
+<div id="toast"></div>
+
+<div id="printArea" style="display:none"></div>
+
+<script>
+// ===== STATE =====
+var meetings   = [];
+var archive    = [];
+var currentId  = null;
+var imgSize    = 'sm';
+var aiMode     = 'summary';
+var filterStatus = '';
+var camStream  = null;
+var camFacing  = 'environment';
+var activeTab2 = 'info';
+
+// ===== INDEXEDDB =====
+var db = null;
+function openDB(cb){
+  if(db){cb(db);return;}
+  var req = indexedDB.open('minuteFlowDB',1);
+  req.onupgradeneeded = function(e){
+    var d=e.target.result;
+    if(!d.objectStoreNames.contains('state')) d.createObjectStore('state');
+  };
+  req.onsuccess = function(e){db=e.target.result;cb(db);};
+  req.onerror   = function(){toast('DB初期化エラー','var(--danger)');};
+}
+function saveDB(cb){
+  openDB(function(d){
+    var tx=d.transaction('state','readwrite');
+    tx.objectStore('state').put({meetings:meetings,archive:archive},'main');
+    tx.oncomplete=function(){if(cb)cb();};
+    tx.onerror=function(){toast('保存エラー','var(--danger)');};
+  });
+}
+function loadDB(cb){
+  openDB(function(d){
+    var req=d.transaction('state','readonly').objectStore('state').get('main');
+    req.onsuccess=function(e){cb(e.target.result||null);};
+    req.onerror=function(){cb(null);};
+  });
+}
+function save(){if(currentId)saveDB();}
+
+// ===== TOAST =====
+function toast(msg,col){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=col||'var(--success)';
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2400);
+}
+
+// ===== SCREENS =====
+function showScreen(name){
+  ['sHome','sDetail','sArchive','sExport'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  ['tHome','tArchive','tExport'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});
+  document.getElementById('fab').style.display = name==='home'?'flex':'none';
+  var map={home:'sHome',archive:'sArchive',export:'sExport'};
+  var tmap={home:'tHome',archive:'tArchive',export:'tExport'};
+  if(map[name]) document.getElementById(map[name]).classList.add('active');
+  if(tmap[name]){var el=document.getElementById(tmap[name]);if(el)el.classList.add('active');}
+  if(name==='home')    renderList();
+  if(name==='archive') renderArchive();
+  if(name==='export')  renderExport();
+}
+function showDetail(){
+  ['sHome','sArchive','sExport'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  document.getElementById('sDetail').classList.add('active');
+  document.getElementById('fab').style.display='none';
+}
+
+// ===== HELPERS =====
+function getM(id){return meetings.find(function(m){return m.id===id;});}
+function statusLabel(s){return{draft:'下書き',inprogress:'会議中',done:'完了'}[s]||'下書き';}
+function statusColor(s){return{draft:'#94a3b8',inprogress:'#60a5fa',done:'#4ade80'}[s]||'#94a3b8';}
+function statusBg(s){return{draft:'rgba(148,163,184,.15)',inprogress:'rgba(59,130,246,.15)',done:'rgba(22,163,74,.15)'}[s]||'rgba(148,163,184,.15)';}
+
+// ===== FILTER =====
+function setFilter(s){
+  filterStatus=s;
+  document.getElementById('searchInput').value='';
+  renderList();
+}
+
+// ===== LIST =====
+function renderList(){
+  var q=document.getElementById('searchInput').value.toLowerCase();
+  var list=meetings.filter(function(m){
+    if(filterStatus && m.status!==filterStatus) return false;
+    if(q && !m.title.toLowerCase().includes(q) && !m.attendees.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('listCount').textContent=list.length+'件';
+  var el=document.getElementById('mList');
+  if(!list.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">議事録がありません<br>「＋ 新しい議事録を作成」から追加</div></div>';
+    return;
+  }
+  el.innerHTML='';
+  list.forEach(function(m){
+    var div=document.createElement('div');
+    div.className='m-item';
+    div.style.cssText='margin:8px 14px;border-radius:12px;';
+    div.onclick=function(){openDetail(m.id);};
+    var doneA=m.actions.filter(function(a){return a.done;}).length;
+    var imgs=m.images||[];
+    var thumbHtml='';
+    if(imgs.length){
+      thumbHtml='<div class="m-thumb-row">';
+      imgs.slice(0,4).forEach(function(img){
+        thumbHtml+='<img class="m-thumb" src="'+getPhotoSrc(img)+'">';
+      });
+      if(imgs.length>4) thumbHtml+='<div class="m-thumb-more">+'+（imgs.length-4)+'</div>';
+      thumbHtml+='</div>';
+    }
+    var tags='';
+    if(m.agendas.length)   tags+='<span class="m-tag" style="background:rgba(99,102,241,.15);color:var(--accent2)">議題 '+m.agendas.length+'</span>';
+    if(m.decisions.length) tags+='<span class="m-tag" style="background:rgba(22,163,74,.15);color:#4ade80">決定 '+m.decisions.length+'</span>';
+    if(m.actions.length)   tags+='<span class="m-tag" style="background:rgba(234,88,12,.15);color:#fb923c">→ '+doneA+'/'+m.actions.length+'</span>';
+    if(imgs.length)        tags+='<span class="m-tag" style="background:rgba(8,145,178,.15);color:#22d3ee">🖼 '+imgs.length+'</span>';
+    div.innerHTML=
+      '<div class="m-info">'+
+        '<div class="m-title'+(m.title?'':' empty')+'">'+(m.title||'（無題の会議）')+'</div>'+
+        '<div class="m-meta">'+
+          (m.date?new Date(m.date).toLocaleString('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'日時未設定')+
+          (m.location?' 📍'+m.location:'')+
+        '</div>'+
+        '<div class="m-tags">'+tags+'</div>'+
+        thumbHtml+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
+        '<span class="status-badge" style="background:'+statusBg(m.status)+';color:'+statusColor(m.status)+'">'+statusLabel(m.status)+'</span>'+
+        '<span style="color:var(--border);font-size:16px">›</span>'+
+      '</div>';
+    el.appendChild(div);
+  });
+}
+
+// ===== ADD / OPEN / SAVE =====
+function newMeeting(){
+  return {id:Date.now(),title:'',date:new Date().toISOString().slice(0,16),
+    location:'',attendees:'',agendas:[],decisions:[],actions:[],images:[],notes:'',status:'draft'};
+}
+function addMeeting(){
+  var m=newMeeting();
+  meetings.unshift(m);
+  saveDB();
+  openDetail(m.id);
+}
+function openDetail(id){
+  currentId=id;
+  var m=getM(id);
+  document.getElementById('dTitle').value      = m.title;
+  document.getElementById('dDate').value       = m.date;
+  document.getElementById('dLocation').value   = m.location;
+  document.getElementById('dAttendees').value  = m.attendees;
+  document.getElementById('dNotes').value      = m.notes;
+  renderAttendees();
+  renderStatus();
+  showTab2('info');
+  showDetail();
+}
+function save(){
+  if(!currentId)return;
+  var m=getM(currentId);if(!m)return;
+  m.title     = document.getElementById('dTitle').value;
+  m.date      = document.getElementById('dDate').value;
+  m.location  = document.getElementById('dLocation').value;
+  m.attendees = document.getElementById('dAttendees').value;
+  m.notes     = document.getElementById('dNotes').value;
+  renderAttendees();
+  saveDB();
+}
+function goBack(){save();currentId=null;showScreen('home');}
+function deleteCurrent(){
+  if(!currentId)return;
+  var m=getM(currentId);
+  if(!confirm('「'+(m&&m.title||'この議事録')+'」を削除しますか？'))return;
+  meetings=meetings.filter(function(x){return x.id!==currentId;});
+  currentId=null;saveDB();toast('削除しました','var(--danger)');showScreen('home');
+}
+
+// ===== STATUS =====
+function setStatus(s){
+  if(!currentId)return;
+  getM(currentId).status=s;
+  renderStatus();saveDB();
+}
+function renderStatus(){
+  var m=getM(currentId);if(!m)return;
+  var map={draft:'stDraft',inprogress:'stInprogress',done:'stDone'};
+  var cls={draft:'active-draft',inprogress:'active-inprogress',done:'active-done'};
+  Object.keys(map).forEach(function(k){
+    var el=document.getElementById(map[k]);
+    el.className='st-btn'+(m.status===k?' '+cls[k]:'');
+  });
+  // update img tab badge
+  var imgs=m.images||[];
+  document.getElementById('imgTabBtn').textContent='🖼 画像'+(imgs.length?' '+imgs.length:'');
+}
+
+// ===== ATTENDEE TAGS =====
+function renderAttendees(){
+  var val=document.getElementById('dAttendees').value;
+  var wrap=document.getElementById('attendeeTagsWrap');
+  wrap.innerHTML='';
+  if(!val)return;
+  val.split(',').forEach(function(a){
+    a=a.trim();if(!a)return;
+    var sp=document.createElement('span');
+    sp.style.cssText='font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:rgba(99,102,241,.18);color:var(--accent2);';
+    sp.textContent=a;
+    wrap.appendChild(sp);
+  });
+}
+
+// ===== TAB2 (detail) =====
+function showTab2(name){
+  activeTab2=name;
+  var tabs=['info','agenda','decision','action','images','notes'];
+  var ids =['tabInfo','tabAgenda','tabDecision','tabAction','tabImages','tabNotes'];
+  ids.forEach(function(id){document.getElementById(id).style.display='none';});
+  var map={info:'tabInfo',agenda:'tabAgenda',decision:'tabDecision',action:'tabAction',images:'tabImages',notes:'tabNotes'};
+  if(map[name]) document.getElementById(map[name]).style.display='';
+  var btns=document.getElementById('tabBar').querySelectorAll('.tab-btn');
+  btns.forEach(function(b,i){b.classList.toggle('active',i===tabs.indexOf(name));});
+  if(name==='agenda')   renderItems('agendas');
+  if(name==='decision') renderItems('decisions');
+  if(name==='action')   renderActions();
+  if(name==='images')   renderPhotos();
+}
+
+// ===== ITEMS (agenda / decision) =====
+function addItem(field){
+  if(!currentId)return;
+  var m=getM(currentId);
+  m[field].push({id:Date.now(),text:''});
+  saveDB();
+  renderItems(field);
+}
+function renderItems(field){
+  var m=getM(currentId);if(!m)return;
+  var listId=field==='agendas'?'agendaList':'decisionList';
+  var el=document.getElementById(listId);
+  el.innerHTML='';
+  if(!m[field].length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">項目を追加してください</div>';
+    return;
+  }
+  var accent=field==='agendas'?'var(--accent)':'var(--green)';
+  m[field].forEach(function(item,i){
+    var div=document.createElement('div');
+    div.className='list-item';
+    if(field==='decisions') div.style.borderLeft='3px solid var(--green)';
+    div.innerHTML=
+      '<span class="list-num" style="color:'+accent+'">'+(field==='decisions'?'✓':String(i+1).padStart(2,'0'))+'</span>'+
+      '<input class="list-input" placeholder="'+(field==='agendas'?'議題 '+(i+1):'決定事項 '+(i+1))+'" value="'+escAttr(item.text)+'">'+
+      '<button class="item-del" onclick="removeItem(\''+field+'\','+item.id+')">×</button>';
+    div.querySelector('input').addEventListener('input',function(e){
+      item.text=e.target.value;saveDB();
+    });
+    el.appendChild(div);
+  });
+}
+function removeItem(field,id){
+  var m=getM(currentId);if(!m)return;
+  m[field]=m[field].filter(function(x){return x.id!==id;});
+  saveDB();renderItems(field);
+}
+
+// ===== ACTIONS =====
+function addAction(){
+  if(!currentId)return;
+  var m=getM(currentId);
+  m.actions.push({id:Date.now(),text:'',owner:'',due:'',done:false});
+  saveDB();renderActions();
+}
+function renderActions(){
+  var m=getM(currentId);if(!m)return;
+  var el=document.getElementById('actionList');
+  el.innerHTML='';
+  if(!m.actions.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">アクションを追加してください</div>';
+    return;
+  }
+  m.actions.forEach(function(item){
+    var div=document.createElement('div');
+    div.className='action-item';
+    if(item.done) div.style.opacity='.6';
+    div.innerHTML=
+      '<div class="action-top">'+
+        '<input type="checkbox" class="action-cb" '+(item.done?'checked':'')+'>'+
+        '<input class="list-input" placeholder="タスク内容" value="'+escAttr(item.text)+'" style="'+(item.done?'text-decoration:line-through;color:var(--muted)':'')+'" >'+
+        '<button class="item-del" onclick="removeAction('+item.id+')">×</button>'+
+      '</div>'+
+      '<div class="action-sub">'+
+        '<div><label class="sub-label">担当者</label><input class="sub-input" placeholder="山田太郎" value="'+escAttr(item.owner)+'"></div>'+
+        '<div><label class="sub-label">期限</label><input type="date" class="sub-input" style="color-scheme:dark" value="'+escAttr(item.due)+'"></div>'+
+      '</div>';
+    var cb=div.querySelector('.action-cb');
+    cb.addEventListener('change',function(){item.done=cb.checked;saveDB();renderActions();});
+    var ti=div.querySelectorAll('.list-input')[0];
+    ti.addEventListener('input',function(){item.text=ti.value;saveDB();});
+    var ow=div.querySelectorAll('.sub-input')[0];
+    ow.addEventListener('input',function(){item.owner=ow.value;saveDB();});
+    var du=div.querySelectorAll('.sub-input')[1];
+    du.addEventListener('change',function(){item.due=du.value;saveDB();});
+    el.appendChild(div);
+  });
+}
+function removeAction(id){
+  var m=getM(currentId);if(!m)return;
+  m.actions=m.actions.filter(function(x){return x.id!==id;});
+  saveDB();renderActions();
+}
+
+// ===== IMAGE COMPRESSION =====
+function compressImg(file,cb){
+  var MAX_W=1280,MAX_H=1280,Q=0.75;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width,h=img.height;
+      var ratio=Math.min(MAX_W/w,MAX_H/h,1);
+      w=Math.round(w*ratio);h=Math.round(h*ratio);
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      cb(canvas.toDataURL('image/jpeg',Q));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function compressBlob(blob,cb){
+  compressImg(new File([blob],'photo.jpg',{type:'image/jpeg'}),cb);
+}
+
+// ===== PHOTOS =====
+function getPhotoSrc(p){return typeof p==='string'?p:p.src;}
+function getPhotoComment(p){return typeof p==='string'?'':p.comment||'';}
+
+function handlePhotoFiles(files){
+  if(!currentId)return;
+  var m=getM(currentId);
+  var loaded=0;
+  toast('圧縮中… ('+files.length+'枚)','#3a7bd5');
+  Array.from(files).forEach(function(file){
+    if(!file.type.startsWith('image/'))return;
+    compressImg(file,function(dataUrl){
+      m.images=m.images||[];
+      m.images.push({src:dataUrl,comment:''});
+      loaded++;
+      if(loaded===files.length){
+        saveDB(function(){renderPhotos();renderStatus();toast('画像を追加しました（圧縮済）');});
+      }
+    });
+  });
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('pasteZone').classList.remove('over');
+  var files=Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');});
+  if(files.length) handlePhotoFiles(files);
+}
+
+function setImgSize(sz){
+  imgSize=sz;
+  ['sm','md','lg'].forEach(function(s){
+    document.getElementById('sz'+s.charAt(0).toUpperCase()+s.slice(1)).classList.toggle('active',s===sz);
+  });
+  var g=document.getElementById('imgGrid');if(g)g.className='img-grid '+sz;
+}
+function renderPhotos(){
+  var m=getM(currentId);
+  var grid=document.getElementById('imgGrid');if(!grid)return;
+  grid.innerHTML='';
+  grid.className='img-grid '+(imgSize||'sm');
+  if(m&&m.images){
+    m.images.forEach(function(p,i){
+      var src=getPhotoSrc(p),comment=getPhotoComment(p);
+      var wrap=document.createElement('div');
+      wrap.className='img-wrap';
+      wrap.innerHTML=
+        '<img src="'+src+'">'+
+        '<button class="img-del" onclick="removePhoto('+i+')">✕</button>'+
+        '<input class="img-caption" placeholder="コメント…" value="'+escAttr(comment)+'">';
+      wrap.querySelector('.img-caption').addEventListener('input',function(e){
+        m.images[i].comment=e.target.value;saveDB();
+      });
+      grid.appendChild(wrap);
+    });
+  }
+  var lblLib=document.createElement('label');lblLib.className='add-photo';
+  lblLib.innerHTML='<span style="font-size:22px">🖼</span><span>ライブラリ</span><input type="file" accept="image/*" multiple onchange="handlePhotoFiles(this.files);this.value=\'\'">';
+  grid.appendChild(lblLib);
+  var lblCam=document.createElement('label');lblCam.className='add-photo';
+  lblCam.style.cursor='pointer';
+  lblCam.innerHTML='<span style="font-size:22px">📷</span><span>カメラ</span>';
+  lblCam.onclick=openCam;
+  grid.appendChild(lblCam);
+}
+function removePhoto(i){
+  if(!confirm('この画像を削除しますか？'))return;
+  var m=getM(currentId);if(!m)return;
+  m.images.splice(i,1);
+  saveDB(function(){renderPhotos();renderStatus();});
+}
+
+// ===== CAMERA =====
+function openCam(){
+  document.getElementById('camModal').classList.add('show');
+  startCam(camFacing);
+}
+function closeCam(){
+  document.getElementById('camModal').classList.remove('show');
+  if(camStream)camStream.getTracks().forEach(function(t){t.stop();});
+  camStream=null;
+}
+function startCam(facing){
+  if(camStream)camStream.getTracks().forEach(function(t){t.stop();});
+  navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:false})
+    .then(function(stream){
+      camStream=stream;
+      document.getElementById('camVideo').srcObject=stream;
+    })
+    .catch(function(){toast('カメラにアクセスできません','var(--danger)');closeCam();});
+}
+function flipCamera(){
+  camFacing=camFacing==='environment'?'user':'environment';
+  startCam(camFacing);
+}
+function shootPhoto(){
+  var video=document.getElementById('camVideo');
+  var canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  canvas.toBlob(function(blob){
+    compressBlob(blob,function(dataUrl){
+      var m=getM(currentId);if(!m)return;
+      m.images=m.images||[];
+      m.images.push({src:dataUrl,comment:''});
+      saveDB(function(){renderPhotos();renderStatus();toast('撮影しました');});
+      closeCam();
+    });
+  },'image/jpeg',0.92);
+}
+
+// ===== PASTE =====
+window.addEventListener('paste',function(e){
+  if(!currentId)return;
+  var items=Array.from(e.clipboardData&&e.clipboardData.items||[]);
+  var imageItems=items.filter(function(it){return it.type.startsWith('image/');});
+  if(!imageItems.length)return;
+  e.preventDefault();
+  var pz=document.getElementById('pasteZone');
+  if(pz){pz.textContent='✓ 貼り付けました！';pz.classList.add('over');setTimeout(function(){pz.classList.remove('over');pz.innerHTML='📋 ここにドロップ、または <kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">⌘V</kbd> / <kbd style="background:var(--card2);padding:1px 6px;border-radius:4px;font-size:11px;font-family:monospace">Ctrl+V</kbd> でスクリーンショットを貼り付け';},1200);}
+  imageItems.forEach(function(it){
+    compressBlob(it.getAsFile(),function(dataUrl){
+      var m=getM(currentId);if(!m)return;
+      m.images=m.images||[];
+      m.images.push({src:dataUrl,comment:''});
+      saveDB(function(){renderPhotos();renderStatus();toast('スクリーンショットを追加しました');});
+    });
+  });
+});
+
+// ===== AI =====
+function setAiMode(mode){
+  aiMode=mode;
+  ['summary','actions','format'].forEach(function(m){
+    document.getElementById('m'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('active',m===mode);
+  });
+  var labels={summary:'✦ 要約を生成',actions:'◈ アクションを提案',format:'❐ 議事録を整形'};
+  document.getElementById('aiRunBtn').textContent=labels[mode];
+}
+function runAI(){
+  var m=getM(currentId);if(!m)return;
+  var prompts={
+    summary:'以下の会議情報から議事録の要約を日本語で3〜5文で作成してください。\n\n会議名: '+m.title+'\n日時: '+m.date+'\n参加者: '+m.attendees+'\n議題: '+m.agendas.map(function(a){return a.text;}).join('、')+'\n決定事項: '+m.decisions.map(function(d){return d.text;}).join('、')+'\nメモ: '+m.notes,
+    actions:'以下の会議内容から次のアクションアイテムを5つ以内で提案してください。担当者は「要確認」としてください。\n\n会議名: '+m.title+'\n議題: '+m.agendas.map(function(a){return a.text;}).join('、')+'\n決定事項: '+m.decisions.map(function(d){return d.text;}).join('、')+'\nメモ: '+m.notes,
+    format:'以下の会議情報をビジネス向けの正式な議事録（マークダウン）に整形してください。\n\n会議名: '+m.title+'\n日時: '+m.date+'\n場所: '+m.location+'\n参加者: '+m.attendees+'\n議題:\n'+m.agendas.map(function(a,i){return (i+1)+'. '+a.text;}).join('\n')+'\n決定事項:\n'+m.decisions.map(function(d,i){return (i+1)+'. '+d.text;}).join('\n')+'\nアクション:\n'+m.actions.map(function(a,i){return (i+1)+'. '+a.text+'（担当:'+（a.owner||'未定')+'　期限:'+（a.due||'未定')+'）';}).join('\n')+'\nメモ: '+m.notes
+  };
+  var btn=document.getElementById('aiRunBtn');
+  btn.textContent='生成中…';btn.disabled=true;
+  document.getElementById('aiResult').style.display='none';
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompts[aiMode]}]})
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    var text=（data.content||[]).map(function(b){return b.text||'';}).join('\n');
+    document.getElementById('aiResultText').textContent=text;
+    document.getElementById('aiResult').style.display='';
+    btn.textContent={summary:'✦ 要約を生成',actions:'◈ アクションを提案',format:'❐ 議事録を整形'}[aiMode];
+    btn.disabled=false;
+  }).catch(function(e){
+    toast('AI生成エラー: '+e.message,'var(--danger)');
+    btn.textContent={summary:'✦ 要約を生成',actions:'◈ アクションを提案',format:'❐ 議事録を整形'}[aiMode];
+    btn.disabled=false;
+  });
+}
+function appendAiResult(){
+  var text=document.getElementById('aiResultText').textContent;
+  var m=getM(currentId);if(!m)return;
+  m.notes=m.notes?(m.notes+'\n\n---\n'+text):text;
+  document.getElementById('dNotes').value=m.notes;
+  saveDB();toast('ノートに追記しました');
+}
+
+// ===== ARCHIVE =====
+function renderArchive(){
+  var el=document.getElementById('archiveList');
+  document.getElementById('archiveCount').textContent=archive.length+'件';
+  if(!archive.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">🗂</div><div class="empty-text">アーカイブはまだありません</div></div>';
+    return;
+  }
+  el.innerHTML='';
+  archive.slice().reverse().forEach(function(rep,ri){
+    var realIdx=archive.length-1-ri;
+    var div=document.createElement('div');div.className='rep-item';
+    div.innerHTML=
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+        '<span style="font-family:monospace;font-size:16px;color:var(--accent);font-weight:700">#'+String(archive.length-ri).padStart(2,'0')+'</span>'+
+        '<span style="font-size:10px;font-weight:700;background:var(--success);color:#fff;border-radius:12px;padding:2px 8px">完了</span>'+
+        '<button onclick="deleteArchive('+realIdx+')" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;padding:3px 8px;cursor:pointer">🗑 削除</button>'+
+      '</div>'+
+      '<div style="font-size:14px;font-weight:500;margin-bottom:3px">'+(rep.title||'（無題）')+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+
+        (rep.date?'📅 '+rep.date:'')+(rep.location?' 📍 '+rep.location:'')+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+
+        '決定 '+rep.decisions.length+' / アクション '+rep.actions.length+' / 画像 '+(rep.images||[]).length+'　保存日：'+rep.savedAt+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'+
+        '<button class="big-btn" style="flex:1;padding:9px;font-size:12px" onclick="restoreArchive('+realIdx+')">✏️ 再編集</button>'+
+      '</div>';
+    el.appendChild(div);
+  });
+}
+function deleteArchive(idx){
+  if(!confirm('削除しますか？'))return;
+  archive.splice(idx,1);saveDB();renderArchive();toast('削除しました','var(--danger)');
+}
+function restoreArchive(idx){
+  var rep=archive[idx];
+  if(!confirm('再編集します。新しい議事録として開きます。'))return;
+  var m=Object.assign({},rep,{id:Date.now()});
+  meetings.unshift(m);
+  archive.splice(idx,1);
+  saveDB();openDetail(m.id);
+}
+
+// ===== EXPORT =====
+function renderExport(){
+  if(!currentId&&meetings.length) currentId=null;
+  var exportList=document.getElementById('exportList');
+  var exportMeta=document.getElementById('exportMeta');
+  exportMeta.textContent=meetings.length+'件の議事録';
+  if(!meetings.length){
+    exportList.innerHTML='<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px">議事録を追加してください</div>';
+    return;
+  }
+  exportList.innerHTML=meetings.map(function(m){
+    var doneA=m.actions.filter(function(a){return a.done;}).length;
+    return '<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px">'+
+      '<div style="flex:1">'+
+        '<div style="font-size:13px;font-weight:500">'+(m.title||'（無題）')+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+
+          (m.date?new Date(m.date).toLocaleString('ja-JP',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'')+
+          ' &nbsp;決定 '+m.decisions.length+' / アクション '+doneA+'/'+m.actions.length+
+        '</div>'+
+      '</div>'+
+      '<span class="status-badge" style="background:'+statusBg(m.status)+';color:'+statusColor(m.status)+'">'+statusLabel(m.status)+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+// ===== PDF PRINT =====
+function buildPrintHtml(){
+  var today=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  var h='<div style="background:#fff;color:#1a2332;font-family:sans-serif;font-size:11px;padding:0;">';
+  h+='<div style="background:#1a2332;color:#fff;padding:20px 24px;border-bottom:3px solid #6366f1;">';
+  h+='<div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#818cf8;margin-bottom:6px;">MinuteFlow — 議事録</div>';
+  h+='<div style="font-size:18px;font-weight:700;">議事録一覧</div>';
+  h+='<div style="font-size:11px;color:#6a7d96;margin-top:4px;">出力日：'+today+'　全'+meetings.length+'件</div>';
+  h+='</div>';
+  meetings.forEach(function(m,i){
+    var doneA=m.actions.filter(function(a){return a.done;}).length;
+    h+='<div style="border:1px solid #dde3ec;border-radius:4px;overflow:hidden;margin:8px 16px;page-break-inside:avoid;">';
+    h+='<div style="background:#1a2332;padding:7px 10px;display:flex;align-items:center;gap:8px;">';
+    h+='<span style="font-size:16px;color:#818cf8;font-weight:700;font-family:monospace;">'+String(i+1).padStart(2,'0')+'</span>';
+    h+='<span style="font-size:13px;font-weight:600;color:#fff;flex:1;">'+(m.title||'（無題）')+'</span>';
+    h+='<span style="font-size:10px;color:#94a3b8;">'+(m.date||'')+'</span>';
+    h+='</div>';
+    h+='<table style="width:100%;border-collapse:collapse;">';
+    h+='<tr>';
+    h+='<td style="padding:6px 8px;border-right:1px solid #dde3ec;vertical-align:top;width:25%;">';
+    h+='<div style="font-size:8px;color:#888;margin-bottom:2px;">場所/URL</div>';
+    h+='<div style="font-size:9px;">'+escH(m.location||'―')+'</div>';
+    h+='<div style="font-size:8px;color:#888;margin-top:4px;margin-bottom:2px;">参加者</div>';
+    h+='<div style="font-size:9px;">'+escH(m.attendees||'―')+'</div>';
+    h+='</td>';
+    h+='<td style="padding:6px 8px;border-right:1px solid #dde3ec;vertical-align:top;width:35%;">';
+    h+='<div style="font-size:8px;color:#888;margin-bottom:2px;">議題</div>';
+    h+='<div style="font-size:9px;">'+（m.agendas.length?m.agendas.map(function(a,i){return (i+1)+'. '+escH(a.text);}).join('<br>'):'―')+'</div>';
+    h+='<div style="font-size:8px;color:#888;margin-top:4px;margin-bottom:2px;">決定事項</div>';
+    h+='<div style="font-size:9px;">'+（m.decisions.length?m.decisions.map(function(d,i){return '✓ '+escH(d.text);}).join('<br>'):'―')+'</div>';
+    h+='</td>';
+    h+='<td style="padding:6px 8px;vertical-align:top;width:40%;">';
+    h+='<div style="font-size:8px;color:#888;margin-bottom:2px;">アクションアイテム ('+doneA+'/'+m.actions.length+')</div>';
+    h+='<div style="font-size:9px;">'+（m.actions.length?m.actions.map(function(a){return (a.done?'☑':'☐')+' '+escH(a.text)+(a.owner?' ['+escH(a.owner)+']':'')+(a.due?' 〆'+a.due:'');}).join('<br>'):'―')+'</div>';
+    if(m.notes) h+='<div style="font-size:8px;color:#888;margin-top:4px;margin-bottom:2px;">メモ</div><div style="font-size:9px;">'+escH(m.notes)+'</div>';
+    h+='</td>';
+    h+='</tr>';
+    if(m.images&&m.images.length){
+      h+='<tr><td colspan="3" style="padding:6px 8px;border-top:1px solid #dde3ec;">';
+      h+='<div style="font-size:8px;color:#888;margin-bottom:4px;">画像 ('+m.images.length+'枚)</div>';
+      h+='<div style="display:flex;gap:4px;flex-wrap:wrap;">';
+      m.images.slice(0,8).forEach(function(p){
+        h+='<img src="'+getPhotoSrc(p)+'" style="width:80px;height:60px;object-fit:cover;border-radius:3px;border:1px solid #dde3ec;">';
+      });
+      h+='</div></td></tr>';
+    }
+    h+='</table></div>';
+  });
+  h+='<div style="text-align:center;font-size:8px;color:#aaa;padding:8px;border-top:1px solid #eee;font-family:monospace;">MinuteFlow &nbsp;|&nbsp; '+today+'</div>';
+  h+='</div>';
+  return h;
+}
+function doPrint(){
+  var pa=document.getElementById('printArea');
+  pa.innerHTML=buildPrintHtml();
+  pa.style.display='block';
+  document.querySelectorAll('body>*:not(#printArea)').forEach(function(el){el.style.display='none';});
+  window.print();
+  setTimeout(function(){
+    pa.innerHTML='';pa.style.display='none';
+    document.querySelectorAll('body>*:not(#printArea)').forEach(function(el){el.style.display='';});
+  },2000);
+}
+
+// ===== CSV =====
+function doCSV(){
+  var bom='\uFEFF';
+  var rows=[['No.','会議名','日時','場所','参加者','議題数','決定数','アクション(完/全)','画像数','ステータス']];
+  meetings.forEach(function(m,i){
+    var doneA=m.actions.filter(function(a){return a.done;}).length;
+    rows.push([i+1,m.title||'',m.date||'',m.location||'',m.attendees||'',
+      m.agendas.length,m.decisions.length,doneA+'/'+m.actions.length,(m.images||[]).length,statusLabel(m.status)]);
+  });
+  var csv=rows.map(function(r){
+    return r.map(function(c){var v=String(c).replace(/"/g,'""');return(v.indexOf(',')>=0||v.indexOf('\n')>=0)?'"'+v+'"':v;}).join(',');
+  }).join('\n');
+  downloadFile(bom+csv,'議事録_MinuteFlow.csv','text/csv;charset=utf-8');
+  toast('CSVをダウンロードしました');
+}
+
+// ===== ZIP =====
+function doZip(){
+  var entries=[];
+  meetings.forEach(function(m,mi){
+    (m.images||[]).forEach(function(p,pi){
+      var src=getPhotoSrc(p);
+      var ext=src.indexOf('image/png')>=0?'png':'jpg';
+      entries.push({path:'meeting'+(mi+1)+'_'+(m.title||'無題').replace(/[^\w\u3040-\u9faf]/g,'_').slice(0,12)+'/'+(pi+1)+'.'+ext,src:src});
+    });
+  });
+  if(!entries.length){toast('画像がありません','var(--danger)');return;}
+  toast('ZIP生成中… ('+entries.length+'枚)','#7c3aed');
+  var zip=new JSZip();
+  entries.forEach(function(e){zip.file(e.path,e.src.split(',')[1]||'',{base64:true});});
+  zip.generateAsync({type:'blob'}).then(function(blob){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='MinuteFlow_画像.zip';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);
+    toast('ZIPをダウンロードしました（'+entries.length+'枚）');
+  });
+}
+
+// ===== BACKUP / RESTORE =====
+function doBackup(){
+  var data={version:1,exportedAt:new Date().toISOString(),meetings:meetings,archive:archive};
+  var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='minuteflow_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},2000);
+  toast('バックアップを保存しました');
+}
+function doRestore(input){
+  var file=input.files[0];if(!file)return;
+  if(!confirm('現在のデータは上書きされます。復元しますか？')){input.value='';return;}
+  var r=new FileReader();
+  r.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data.version){toast('ファイルが正しくありません','var(--danger)');return;}
+      meetings=data.meetings||[];archive=data.archive||[];
+      saveDB(function(){renderList();toast('✅ 復元しました（'+meetings.length+'件）');});
+    }catch(ex){toast('復元エラー: '+ex.message,'var(--danger)');}
+  };
+  r.readAsText(file);input.value='';
+}
+
+function downloadFile(content,filename,type){
+  var blob=new Blob([content],{type:type});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return String(s||'').replace(/"/g,'&quot;');}
+
+// ===== JSZip (CDN不要・インライン) =====
+var JSZip=(function(){
+  function u16(v){return[(v)&0xff,(v>>8)&0xff];}
+  function u32(v){return[(v)&0xff,(v>>8)&0xff,(v>>16)&0xff,(v>>24)&0xff];}
+  function sB(s){var a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i)&0xff;return a;}
+  function cat(arrays){var n=0;for(var i=0;i<arrays.length;i++)n+=arrays[i].length;var o=new Uint8Array(n),p=0;for(var i=0;i<arrays.length;i++){o.set(arrays[i],p);p+=arrays[i].length;}return o;}
+  var CT=(function(){var t=new Uint32Array(256);for(var i=0;i<256;i++){var c=i;for(var j=0;j<8;j++)c=c&1?(0xedb88320^(c>>>1)):(c>>>1);t[i]=c;}return t;})();
+  function crc32(b){var c=0xffffffff;for(var i=0;i<b.length;i++)c=CT[(c^b[i])&0xff]^(c>>>8);return(c^0xffffffff)>>>0;}
+  function Zip(){this._files=[];}
+  Zip.prototype.file=function(name,data,opts){
+    if(opts&&opts.base64){var s=atob(data.replace(/[^A-Za-z0-9+/=]/g,''));var a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);data=a;}
+    else if(typeof data==='string')data=sB(data);
+    this._files.push({name:sB(name),data:data});return this;
+  };
+  Zip.prototype.generateAsync=function(opts){
+    var files=this._files;
+    return new Promise(function(resolve){
+      var locals=[],offsets=[],pos=0;
+      files.forEach(function(f){
+        var crc=crc32(f.data),sz=f.data.length;
+        var lh=new Uint8Array([0x50,0x4b,0x03,0x04,20,0,0,0,0,0,0,0,0,0].concat(u32(crc)).concat(u32(sz)).concat(u32(sz)).concat(u16(f.name.length)).concat(u16(0)));
+        var entry=cat([lh,f.name,f.data]);offsets.push(pos);locals.push(entry);pos+=entry.length;
+      });
+      var cds=[],cdStart=pos;
+      files.forEach(function(f,i){
+        var crc=crc32(f.data),sz=f.data.length;
+        var cd=new Uint8Array([0x50,0x4b,0x01,0x02,20,0,20,0,0,0,0,0,0,0,0,0].concat(u32(crc)).concat(u32(sz)).concat(u32(sz)).concat(u16(f.name.length)).concat(u16(0)).concat(u16(0)).concat(u16(0)).concat(u16(0)).concat(u32(0)).concat(u32(offsets[i])));
+        cds.push(cat([cd,f.name]));
+      });
+      var cdSize=0;for(var i=0;i<cds.length;i++)cdSize+=cds[i].length;
+      var eocd=new Uint8Array([0x50,0x4b,0x05,0x06,0,0,0,0].concat(u16(files.length)).concat(u16(files.length)).concat(u32(cdSize)).concat(u32(cdStart)).concat(u16(0)));
+      resolve(new Blob([cat(locals.concat(cds).concat([eocd]))],{type:(opts&&opts.mimeType)||'application/zip'}));
+    });
+  };
+  return Zip;
+})();
+
+// ===== INIT =====
+openDB(function(){
+  loadDB(function(d){
+    if(d){meetings=d.meetings||[];archive=d.archive||[];}
+    renderList();
+  });
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+</body>
+</html>
