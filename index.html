@@ -518,7 +518,7 @@ function renderList(){
       imgs.slice(0,4).forEach(function(img){
         thumbHtml+='<img class="m-thumb" src="'+getPhotoSrc(img)+'">';
       });
-      if(imgs.length>4) thumbHtml+='<div class="m-thumb-more">+'+（imgs.length-4)+'</div>';
+      if(imgs.length>4) thumbHtml+='<div class="m-thumb-more">++'+(imgs.length-4)+'</div>';
       thumbHtml+='</div>';
     }
     var tags='';
@@ -888,7 +888,7 @@ function runAI(){
   var prompts={
     summary:'以下の会議情報から議事録の要約を日本語で3〜5文で作成してください。\n\n会議名: '+m.title+'\n日時: '+m.date+'\n参加者: '+m.attendees+'\n議題: '+m.agendas.map(function(a){return a.text;}).join('、')+'\n決定事項: '+m.decisions.map(function(d){return d.text;}).join('、')+'\nメモ: '+m.notes,
     actions:'以下の会議内容から次のアクションアイテムを5つ以内で提案してください。担当者は「要確認」としてください。\n\n会議名: '+m.title+'\n議題: '+m.agendas.map(function(a){return a.text;}).join('、')+'\n決定事項: '+m.decisions.map(function(d){return d.text;}).join('、')+'\nメモ: '+m.notes,
-    format:'以下の会議情報をビジネス向けの正式な議事録（マークダウン）に整形してください。\n\n会議名: '+m.title+'\n日時: '+m.date+'\n場所: '+m.location+'\n参加者: '+m.attendees+'\n議題:\n'+m.agendas.map(function(a,i){return (i+1)+'. '+a.text;}).join('\n')+'\n決定事項:\n'+m.decisions.map(function(d,i){return (i+1)+'. '+d.text;}).join('\n')+'\nアクション:\n'+m.actions.map(function(a,i){return (i+1)+'. '+a.text+'（担当:'+（a.owner||'未定')+'　期限:'+（a.due||'未定')+'）';}).join('\n')+'\nメモ: '+m.notes
+    format:'以下の会議情報をビジネス向けの正式な議事録（マークダウン）に整形してください。\n\n会議名: '+m.title+'\n日時: '+m.date+'\n場所: '+m.location+'\n参加者: '+m.attendees+'\n議題:\n'+m.agendas.map(function(a,i){return (i+1)+'. '+a.text;}).join('\n')+'\n決定事項:\n'+m.decisions.map(function(d,i){return (i+1)+'. '+d.text;}).join('\n')+'\nアクション:\n'+m.actions.map(function(a,i){return (i+1)+'. '+a.text+'（担当:+'+(a.owner||'未定')+'　期限:+'+(a.due||'未定')+'）';}).join('\n')+'\nメモ: '+m.notes
   };
   var btn=document.getElementById('aiRunBtn');
   btn.textContent='生成中…';btn.disabled=true;
@@ -899,7 +899,7 @@ function runAI(){
     body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompts[aiMode]}]})
   }).then(function(r){return r.json();})
   .then(function(data){
-    var text=（data.content||[]).map(function(b){return b.text||'';}).join('\n');
+    var text=(data.content||[]).map(function(b){return b.text||'';}).join('\n');
     document.getElementById('aiResultText').textContent=text;
     document.getElementById('aiResult').style.display='';
     btn.textContent={summary:'✦ 要約を生成',actions:'◈ アクションを提案',format:'❐ 議事録を整形'}[aiMode];
@@ -1014,13 +1014,13 @@ function buildPrintHtml(){
     h+='</td>';
     h+='<td style="padding:6px 8px;border-right:1px solid #dde3ec;vertical-align:top;width:35%;">';
     h+='<div style="font-size:8px;color:#888;margin-bottom:2px;">議題</div>';
-    h+='<div style="font-size:9px;">'+（m.agendas.length?m.agendas.map(function(a,i){return (i+1)+'. '+escH(a.text);}).join('<br>'):'―')+'</div>';
+    h+='<div style="font-size:9px;">'+(m.agendas.length?m.agendas.map(function(a,i){return (i+1)+'. '+escH(a.text);}).join('<br>'):'―')+'</div>';
     h+='<div style="font-size:8px;color:#888;margin-top:4px;margin-bottom:2px;">決定事項</div>';
-    h+='<div style="font-size:9px;">'+（m.decisions.length?m.decisions.map(function(d,i){return '✓ '+escH(d.text);}).join('<br>'):'―')+'</div>';
+    h+='<div style="font-size:9px;">'+(m.decisions.length?m.decisions.map(function(d,i){return '✓ '+escH(d.text);}).join('<br>'):'―')+'</div>';
     h+='</td>';
     h+='<td style="padding:6px 8px;vertical-align:top;width:40%;">';
     h+='<div style="font-size:8px;color:#888;margin-bottom:2px;">アクションアイテム ('+doneA+'/'+m.actions.length+')</div>';
-    h+='<div style="font-size:9px;">'+（m.actions.length?m.actions.map(function(a){return (a.done?'☑':'☐')+' '+escH(a.text)+(a.owner?' ['+escH(a.owner)+']':'')+(a.due?' 〆'+a.due:'');}).join('<br>'):'―')+'</div>';
+    h+='<div style="font-size:9px;">'+(m.actions.length?m.actions.map(function(a){return (a.done?'☑':'☐')+' '+escH(a.text)+(a.owner?' ['+escH(a.owner)+']':'')+(a.due?' 〆'+a.due:'');}).join('<br>'):'―')+'</div>';
     if(m.notes) h+='<div style="font-size:8px;color:#888;margin-top:4px;margin-bottom:2px;">メモ</div><div style="font-size:9px;">'+escH(m.notes)+'</div>';
     h+='</td>';
     h+='</tr>';
