@@ -218,8 +218,15 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 /* PRINT */
 #printArea{display:none;}
 @media print{
-  body>*{display:none!important;}
-  #printArea{display:block!important;color:#1a2332;font-family:sans-serif;}
+  html,body{
+    height:auto!important;overflow:visible!important;
+    display:block!important;background:#fff!important;
+  }
+  #screenWrap,#topNav,#bottomNav,#fab,#toast,#camModal{display:none!important;}
+  #printArea{
+    display:block!important;color:#1a2332;font-family:sans-serif;
+    background:#fff;width:100%;
+  }
 }
 </style>
 </head>
@@ -488,7 +495,7 @@ function newMeeting(){
     location:'', attendees:'', agendas:[], notes:'', status:'draft'};
 }
 function newAgenda(){
-  return {id:Date.now(), text:'', decisions:[], actions:[], images:[]};
+  return {id:Date.now(), text:'', discussion:'', decisions:[], actions:[], images:[]};
 }
 
 // ===== FILTER =====
@@ -657,6 +664,22 @@ function renderAgendaBlocks(){
       ag.text = e.target.value; saveDB();
     });
     block.appendChild(hdr);
+
+    // ── 議論内容（自由記入）──
+    var discSec = document.createElement('div');
+    discSec.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 14px 4px;border-top:1px solid var(--border);';
+    discSec.innerHTML = '<span style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:#60a5fa;">💬 議論内容</span>';
+    block.appendChild(discSec);
+    var discArea = document.createElement('textarea');
+    discArea.className = 'fta';
+    discArea.placeholder = '議論の内容、背景、補足情報などを自由に記入…';
+    discArea.rows = 3;
+    discArea.style.cssText = 'border-top:none;min-height:60px;font-size:12px;padding:8px 14px;';
+    discArea.value = ag.discussion || '';
+    discArea.addEventListener('input', function(){
+      ag.discussion = discArea.value; saveDB();
+    });
+    block.appendChild(discArea);
 
     // ── 決定事項 ──
     var decSec = document.createElement('div');
@@ -1061,13 +1084,14 @@ function restoreArchive(idx){
 // ===== EXPORT / PRINT =====
 function renderExport(){
   var exportMeta = document.getElementById('exportMeta');
-  exportMeta.textContent = meetings.length+'件の議事録';
+  var allData = meetings.concat(archive);
+  exportMeta.textContent = '作業中 '+meetings.length+'件 / アーカイブ '+archive.length+'件';
   var exportList = document.getElementById('exportList');
-  if(!meetings.length){
+  if(!allData.length){
     exportList.innerHTML = '<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;">議事録を追加してください</div>';
     return;
   }
-  exportList.innerHTML = meetings.map(function(m){
+  function makeRow(m, label, labelColor){
     var totalAct=(m.agendas||[]).reduce(function(s,a){return s+(a.actions||[]).length;},0);
     var doneAct =(m.agendas||[]).reduce(function(s,a){return s+(a.actions||[]).filter(function(x){return x.done;}).length;},0);
     return '<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'+
@@ -1075,19 +1099,30 @@ function renderExport(){
         '<div style="font-size:13px;font-weight:500;">'+(m.title||'（無題）')+'</div>'+
         '<div style="font-size:11px;color:var(--muted);">'+(m.date||'')+' 議題 '+(m.agendas||[]).length+' / アクション '+doneAct+'/'+totalAct+'</div>'+
       '</div>'+
-      '<span class="status-badge" style="background:'+statusBg(m.status)+';color:'+statusColor(m.status)+';">'+statusLabel(m.status)+'</span>'+
+      '<span class="status-badge" style="background:'+labelColor+';color:#fff;font-size:10px;">'+label+'</span>'+
     '</div>';
-  }).join('');
+  }
+  var html = '';
+  if(meetings.length){
+    html += '<div style="padding:6px 14px;font-size:10px;letter-spacing:2px;color:var(--muted);background:var(--card2);border-bottom:1px solid var(--border);">作業中</div>';
+    html += meetings.map(function(m){return makeRow(m,statusLabel(m.status),statusColor(m.status));}).join('');
+  }
+  if(archive.length){
+    html += '<div style="padding:6px 14px;font-size:10px;letter-spacing:2px;color:var(--muted);background:var(--card2);border-bottom:1px solid var(--border);">アーカイブ</div>';
+    html += archive.map(function(m){return makeRow(m,'完了','#16a34a');}).join('');
+  }
+  exportList.innerHTML = html;
 }
 function buildPrintHtml(){
   var today = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  var allItems = meetings.concat(archive);
   var h='<div style="background:#fff;color:#1a2332;font-family:sans-serif;font-size:11px;">';
   h+='<div style="background:#1a2332;color:#fff;padding:20px 24px;border-bottom:3px solid #6366f1;">';
   h+='<div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#818cf8;margin-bottom:6px;">MinuteFlow</div>';
   h+='<div style="font-size:18px;font-weight:700;">議事録一覧</div>';
-  h+='<div style="font-size:11px;color:#6a7d96;margin-top:4px;">出力日：'+today+'　全'+meetings.length+'件</div>';
+  h+='<div style="font-size:11px;color:#6a7d96;margin-top:4px;">出力日：'+today+'　全'+allItems.length+'件（作業中 '+meetings.length+' / アーカイブ '+archive.length+'）</div>';
   h+='</div>';
-  meetings.forEach(function(m,mi){
+  allItems.forEach(function(m,mi){
     h+='<div style="border:1px solid #dde3ec;border-radius:4px;overflow:hidden;margin:8px 16px;page-break-inside:avoid;">';
     h+='<div style="background:#1a2332;padding:7px 10px;">';
     h+='<span style="font-size:15px;color:#818cf8;font-weight:700;font-family:monospace;margin-right:8px;">'+String(mi+1).padStart(2,'0')+'</span>';
@@ -1114,11 +1149,32 @@ function buildPrintHtml(){
         });
         h+='</ul>';
       }
+      if(ag.discussion){
+        h+='<div style="font-size:9px;color:#1e40af;margin:4px 0 2px;font-weight:700;">議論内容</div>';
+        h+='<div style="font-size:9px;color:#334155;line-height:1.7;background:#f8fafc;border-left:3px solid #6366f1;padding:4px 8px;border-radius:2px;white-space:pre-wrap;">'+escH(ag.discussion)+'</div>';
+      }
       if(ag.images&&ag.images.length){
-        h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">';
-        ag.images.slice(0,4).forEach(function(p){
-          h+='<img src="'+getPhotoSrc(p)+'" style="width:70px;height:52px;object-fit:cover;border-radius:3px;border:1px solid #dde3ec;">';
-        });
+        var imgCols = Math.min(ag.images.length, 3);
+        var imgW = Math.floor(96/imgCols);
+        h+='<div style="margin-top:6px;">';
+        h+='<div style="font-size:9px;color:#555;margin-bottom:4px;">画像（'+ag.images.length+'枚）</div>';
+        h+='<table style="width:100%;border-collapse:collapse;table-layout:fixed;">';
+        // 3列グリッドで並べる
+        for(var r=0;r<Math.ceil(ag.images.length/3);r++){
+          h+='<tr>';
+          for(var c=0;c<3;c++){
+            var pi=r*3+c;
+            if(pi<ag.images.length){
+              h+='<td style="width:33.3%;padding:2px;vertical-align:top;">';
+              h+='<img src="'+getPhotoSrc(ag.images[pi])+'" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;border:1px solid #dde3ec;display:block;">';
+              h+='</td>';
+            } else {
+              h+='<td style="width:33.3%;padding:2px;"></td>';
+            }
+          }
+          h+='</tr>';
+        }
+        h+='</table>';
         h+='</div>';
       }
       h+='</div>';
@@ -1134,13 +1190,13 @@ function buildPrintHtml(){
 }
 function doPrint(){
   var pa = document.getElementById('printArea');
-  pa.innerHTML = buildPrintHtml(); pa.style.display='block';
-  document.querySelectorAll('body>*:not(#printArea)').forEach(function(el){el.style.display='none';});
+  pa.innerHTML = buildPrintHtml();
+  pa.style.display = 'block';
   window.print();
   setTimeout(function(){
-    pa.innerHTML=''; pa.style.display='none';
-    document.querySelectorAll('body>*:not(#printArea)').forEach(function(el){el.style.display='';});
-  },2000);
+    pa.innerHTML = '';
+    pa.style.display = 'none';
+  }, 3000);
 }
 
 // ===== CSV =====
