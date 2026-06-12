@@ -271,6 +271,22 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
     <input id="dTitle" type="text" placeholder="会議名を入力…" oninput="save()">
     <button class="del-btn" onclick="deleteCurrent()">🗑</button>
   </div>
+  <!-- 日時・場所・参加者 固定入力エリア -->
+  <div id="metaBar" style="flex-shrink:0;background:var(--card2);border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border);gap:8px;">
+      <span style="font-size:13px;min-width:18px;">📅</span>
+      <input class="meta-val" id="dDate" type="datetime-local" style="color-scheme:dark;font-size:13px;" onchange="save()">
+    </div>
+    <div style="display:flex;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border);gap:8px;">
+      <span style="font-size:13px;min-width:18px;">📍</span>
+      <input class="meta-val" id="dLocation" type="text" placeholder="場所 / Zoom URL…" style="font-size:13px;" oninput="save()">
+    </div>
+    <div style="display:flex;align-items:center;padding:7px 14px;gap:8px;">
+      <span style="font-size:13px;min-width:18px;">👥</span>
+      <input class="meta-val" id="dAttendees" type="text" placeholder="参加者（カンマ区切り）" style="font-size:13px;" oninput="save();renderAttendees()">
+    </div>
+    <div id="attendeeTagsWrap" style="padding:0 14px 6px;display:flex;flex-wrap:wrap;gap:5px;min-height:0;"></div>
+  </div>
   <div class="st-bar">
     <button class="st-btn" id="stDraft" onclick="setStatus('draft')">下書き</button>
     <button class="st-btn" id="stInprogress" onclick="setStatus('inprogress')">会議中</button>
@@ -278,18 +294,6 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
   </div>
   <!-- 1ページスクロール -->
   <div class="screen-body" id="detailBody" style="padding:12px 14px 100px;display:flex;flex-direction:column;gap:12px;">
-
-    <!-- 基本情報 -->
-    <div class="card">
-      <div class="sec-hdr"><span class="dot"></span>基本情報</div>
-      <div class="meta-row"><span class="meta-icon">📅</span><span class="meta-key">日時</span>
-        <input class="meta-val" id="dDate" type="datetime-local" style="color-scheme:dark" onchange="save()"></div>
-      <div class="meta-row"><span class="meta-icon">📍</span><span class="meta-key">場所</span>
-        <input class="meta-val" id="dLocation" type="text" placeholder="会議室A / Zoom…" oninput="save()"></div>
-      <div class="meta-row" style="border-bottom:none"><span class="meta-icon">👥</span><span class="meta-key">参加者</span>
-        <input class="meta-val" id="dAttendees" type="text" placeholder="山田, 鈴木, 田中…" oninput="save();renderAttendees()"></div>
-      <div id="attendeeTagsWrap" style="padding:4px 14px 10px;display:flex;flex-wrap:wrap;gap:5px;min-height:0;"></div>
-    </div>
 
     <!-- 議題リスト（各議題が独立ブロック） -->
     <div id="agendaBlocks" style="display:flex;flex-direction:column;gap:12px;"></div>
