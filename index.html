@@ -178,12 +178,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 .block-notes{padding:8px 14px;border-top:1px solid var(--border);}
 
 /* AI panel */
-.ai-panel{background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:14px;
-  border:1px solid #4f46e5;padding:14px;}
-.ai-mode-btn{padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:11px;
-  font-weight:700;background:rgba(255,255,255,.1);color:#c7d2fe;transition:all .15s;
-  font-family:'Noto Sans JP',sans-serif;}
-.ai-mode-btn.active{background:#6366f1;color:#fff;}
+
 
 /* BIG BUTTONS */
 .big-btn{width:100%;padding:13px;border-radius:12px;border:none;background:var(--accent);
@@ -317,33 +312,6 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
       <div class="sec-hdr"><span class="dot" style="background:#94a3b8"></span>全体メモ</div>
       <textarea class="fta" id="dNotes" placeholder="会議全体のメモ、補足情報…" rows="4" oninput="save()"></textarea>
     </div>
-
-    <!-- AI -->
-    <div class="ai-panel">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-        <span style="font-size:16px;">✦</span>
-        <span style="font-weight:800;font-size:14px;">AI アシスタント</span>
-      </div>
-      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
-        <button class="ai-mode-btn active" id="mSummary" onclick="setAiMode('summary')">✦ 要約</button>
-        <button class="ai-mode-btn" id="mActions" onclick="setAiMode('actions')">◈ アクション提案</button>
-        <button class="ai-mode-btn" id="mFormat" onclick="setAiMode('format')">❐ 整形</button>
-      </div>
-      <button onclick="runAI()" id="aiRunBtn"
-        style="width:100%;padding:10px;background:#818cf8;color:#fff;border:none;border-radius:10px;
-        font-weight:800;font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">
-        ✦ 要約を生成
-      </button>
-      <div id="aiResult" style="display:none;margin-top:12px;background:rgba(255,255,255,.08);border-radius:10px;padding:12px;">
-        <pre id="aiResultText" style="margin:0;font-size:12px;line-height:1.7;color:#e0e7ff;white-space:pre-wrap;font-family:inherit;"></pre>
-        <button onclick="appendAiResult()" style="margin-top:8px;font-size:12px;font-weight:700;padding:6px 12px;
-          background:#4f46e5;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">
-          メモに追記
-        </button>
-      </div>
-    </div>
-
-
   </div>
 </div>
 
@@ -406,7 +374,6 @@ var meetings = [];
 var archive  = [];
 var currentId = null;
 var imgSize   = 'sm';
-var aiMode    = 'summary';
 var filterStatus = '';
 var camStream = null;
 var camFacing = 'environment';
@@ -978,53 +945,9 @@ window.addEventListener('paste', function(e){
   });
 });
 
-// ===== AI =====
-function setAiMode(mode){
-  aiMode = mode;
-  ['summary','actions','format'].forEach(function(m){
-    document.getElementById('m'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('active', m===mode);
-  });
-  var labels = {summary:'✦ 要約を生成', actions:'◈ アクションを提案', format:'❐ 議事録を整形'};
-  document.getElementById('aiRunBtn').textContent = labels[mode];
-}
-function runAI(){
-  var m = getM(currentId); if(!m) return;
-  var agText = (m.agendas||[]).map(function(a,i){
-    return (i+1)+'. '+a.text+
-      (a.decisions.length?'\n  決定: '+a.decisions.map(function(d){return d.text;}).join('、'):'');
-  }).join('\n');
-  var prompts = {
-    summary: '以下の会議情報から議事録の要約を日本語で3〜5文で作成してください。\n\n会議名: '+m.title+'\nこちら参加者: '+m.attendees+'\n先方参加者: '+(m.attendeesOther||'―')+'\n議題:\n'+agText+'\nメモ: '+m.notes,
-    actions: '以下の会議内容から次のアクションアイテムを5つ以内で提案してください。\n\n議題:\n'+agText+'\nメモ: '+m.notes,
-    format: '以下の会議情報をビジネス向けの正式な議事録（マークダウン）に整形してください。\n\n会議名: '+m.title+'\nこちら参加者: '+m.attendees+'\n先方参加者: '+(m.attendeesOther||'―')+'\n議題:\n'+agText+'\nメモ: '+m.notes
-  };
-  var btn = document.getElementById('aiRunBtn');
-  btn.textContent = '生成中…'; btn.disabled = true;
-  document.getElementById('aiResult').style.display = 'none';
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
-      messages:[{role:'user',content:prompts[aiMode]}]})
-  }).then(function(r){return r.json();})
-  .then(function(data){
-    var text = (data.content||[]).map(function(b){return b.text||'';}).join('\n');
-    document.getElementById('aiResultText').textContent = text;
-    document.getElementById('aiResult').style.display = '';
-  }).catch(function(e){
-    toast('AI生成エラー: '+e.message,'var(--danger)');
-  }).finally(function(){
-    var labels = {summary:'✦ 要約を生成',actions:'◈ アクションを提案',format:'❐ 議事録を整形'};
-    btn.textContent = labels[aiMode]; btn.disabled = false;
-  });
-}
-function appendAiResult(){
-  var text = document.getElementById('aiResultText').textContent;
-  var m = getM(currentId); if(!m) return;
-  m.notes = m.notes?(m.notes+'\n\n---\n'+text):text;
-  document.getElementById('dNotes').value = m.notes;
-  saveDB(); toast('メモに追記しました');
-}
+
+
+
 
 // ===== ARCHIVE =====
 function archiveCurrent(){
