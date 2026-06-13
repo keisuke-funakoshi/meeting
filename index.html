@@ -269,6 +269,11 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
   <div id="detailHdr">
     <button class="back-btn" onclick="goBack()">‹</button>
     <input id="dTitle" type="text" placeholder="会議名を入力…" oninput="save()">
+    <button onclick="archiveCurrent()" style="width:34px;height:34px;background:var(--accent);border:none;
+      border-radius:10px;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;
+      justify-content:center;transition:transform .1s;flex-shrink:0;" title="アーカイブに保存"
+      onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" 
+      ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">✅</button>
     <button class="del-btn" onclick="deleteCurrent()">🗑</button>
   </div>
   <!-- 日時・場所・参加者 固定入力エリア -->
@@ -293,11 +298,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
     </div>
     <div id="attendeeTagsWrap" style="padding:0 14px 6px;display:flex;flex-wrap:wrap;gap:5px;min-height:0;"></div>
   </div>
-  <div class="st-bar">
-    <button class="st-btn" id="stDraft" onclick="setStatus('draft')">下書き</button>
-    <button class="st-btn" id="stInprogress" onclick="setStatus('inprogress')">会議中</button>
-    <button class="st-btn" id="stDone" onclick="setStatus('done')">完了</button>
-  </div>
+
   <!-- 1ページスクロール -->
   <div class="screen-body" id="detailBody" style="padding:12px 14px 100px;display:flex;flex-direction:column;gap:12px;">
 
@@ -342,8 +343,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
       </div>
     </div>
 
-    <!-- アーカイブ -->
-    <button class="big-btn complete" onclick="archiveCurrent()">✅ &nbsp;この議事録をアーカイブに保存</button>
+
   </div>
 </div>
 
@@ -534,7 +534,6 @@ function renderList(){
     div.innerHTML =
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'+
         '<div class="m-title'+(m.title?'':' empty')+'">'+(m.title||'（無題の会議）')+'</div>'+
-        '<span class="status-badge" style="background:'+statusBg(m.status)+';color:'+statusColor(m.status)+';flex-shrink:0;">'+statusLabel(m.status)+'</span>'+
       '</div>'+
       '<div class="m-meta">'+(m.date?m.date.replace('T',' '):'日時未設定')+(m.location?' 📍'+m.location:'')+'</div>'+
       (tags?'<div class="m-tags">'+tags+'</div>':'');
@@ -559,7 +558,6 @@ function openDetail(id){
   document.getElementById('dAttendeesOther').value = m.attendeesOther || '';
   document.getElementById('dNotes').value          = m.notes          || '';
   renderAttendees();
-  renderStatus();
   renderAgendaBlocks();
   showDetail();
   document.getElementById('detailBody').scrollTop = 0;
