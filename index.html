@@ -88,8 +88,9 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 
 /* DETAIL HEADER */
 #detailHdr{flex-shrink:0;background:rgba(15,19,24,.97);
-  border-bottom:1px solid var(--border);padding:10px 14px;
-  display:flex;align-items:center;gap:8px;}
+  border-bottom:1px solid var(--border);padding:8px 10px;
+  display:flex;align-items:center;gap:6px;overflow:hidden;}
+#dTitle{min-width:0;flex:1;}
 .back-btn{width:34px;height:34px;background:var(--card);border:1px solid var(--border);
   border-radius:10px;color:var(--text);font-size:20px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:transform .1s;}
@@ -267,17 +268,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 <!-- ====== DETAIL ====== -->
 <div class="screen" id="sDetail">
   <div id="detailHdr">
-    <button class="back-btn" onclick="goBack()">‹</button>
+    <button class="back-btn" onclick="goBack()" style="flex-shrink:0;">‹</button>
     <input id="dTitle" type="text" placeholder="会議名を入力…" oninput="save()">
-    <div style="display:flex;gap:6px;flex-shrink:0;margin-right:4px;">
-      <button onclick="archiveCurrent()" style="height:34px;padding:0 10px;background:var(--accent);border:none;
-        border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;
-        gap:4px;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;"
-        ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">
-        ✅ <span>作成完了</span>
-      </button>
-      <button class="del-btn" onclick="deleteCurrent()">🗑</button>
-    </div>
+    <button onclick="archiveCurrent()" style="flex-shrink:0;height:32px;padding:0 8px;
+      background:var(--accent);border:none;border-radius:8px;color:#fff;
+      font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;
+      font-family:'Noto Sans JP',sans-serif;">✅作成完了</button>
+    <button class="del-btn" onclick="deleteCurrent()" style="flex-shrink:0;">🗑</button>
   </div>
   <!-- 日時・場所・参加者 固定入力エリア -->
   <div id="metaBar" style="flex-shrink:0;background:var(--card2);border-bottom:1px solid var(--border);">
