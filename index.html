@@ -116,14 +116,16 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 
 /* AGENDA BLOCK — 議題+決定+アクション+画像の1セット */
 .agenda-block{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;}
-.agenda-block-hdr{background:var(--card2);padding:10px 14px;
-  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
-.agenda-num{font-family:monospace;font-size:16px;color:var(--accent);font-weight:700;min-width:24px;}
-.agenda-input{flex:1;background:transparent;border:none;color:var(--text);
+.agenda-block-hdr{background:var(--card2);padding:8px 10px 8px 14px;
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;overflow:hidden;}
+.agenda-num{font-family:monospace;font-size:16px;color:var(--accent);font-weight:700;min-width:24px;flex-shrink:0;}
+.agenda-input{flex:1;min-width:0;background:transparent;border:none;color:var(--text);
   font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;outline:none;}
 .agenda-input::placeholder{color:var(--muted);}
-.agenda-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 2px;}
-.agenda-del:active{color:var(--danger);}
+.agenda-del{background:var(--card);border:1px solid var(--border);border-radius:8px;
+  color:var(--muted);font-size:14px;cursor:pointer;padding:4px 8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.agenda-del:active{background:var(--danger);color:#fff;border-color:var(--danger);}
 
 /* sub section label inside block */
 .sub-sec{display:flex;align-items:center;justify-content:space-between;
@@ -633,7 +635,7 @@ function renderAgendaBlocks(){
     hdr.innerHTML =
       '<span class="agenda-num">'+String(idx+1).padStart(2,'0')+'</span>'+
       '<input class="agenda-input" placeholder="議題を入力…" value="'+escAttr(ag.text)+'">'+
-      '<button class="agenda-del" onclick="removeAgenda('+ag.id+')">×</button>';
+      '<button class="agenda-del" onclick="removeAgenda('+ag.id+')">🗑</button>';
     hdr.querySelector('input').addEventListener('input', function(e){
       ag.text = e.target.value; saveDB();
     });
