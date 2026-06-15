@@ -117,14 +117,15 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 /* AGENDA BLOCK — 議題+決定+アクション+画像の1セット */
 .agenda-block{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;}
 .agenda-block-hdr{background:var(--card2);padding:8px 10px 8px 14px;
-  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;overflow:hidden;}
-.agenda-num{font-family:monospace;font-size:16px;color:var(--accent);font-weight:700;min-width:24px;flex-shrink:0;}
-.agenda-input{flex:1;min-width:0;background:transparent;border:none;color:var(--text);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+.agenda-num{font-family:monospace;font-size:16px;color:var(--accent);font-weight:700;
+  width:28px;flex-shrink:0;}
+.agenda-input{flex:1;min-width:0;width:0;background:transparent;border:none;color:var(--text);
   font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;outline:none;}
 .agenda-input::placeholder{color:var(--muted);}
-.agenda-del{background:var(--card);border:1px solid var(--border);border-radius:8px;
-  color:var(--muted);font-size:14px;cursor:pointer;padding:4px 8px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.agenda-del{background:var(--card2);border:1px solid var(--border);border-radius:8px;
+  color:var(--muted);font-size:13px;cursor:pointer;padding:5px 8px;
+  flex-shrink:0;line-height:1;transition:all .1s;}
 .agenda-del:active{background:var(--danger);color:#fff;border-color:var(--danger);}
 
 /* sub section label inside block */
@@ -158,11 +159,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans
 .img-grid.sm{grid-template-columns:repeat(4,1fr);}
 .img-grid.md{grid-template-columns:repeat(3,1fr);}
 .img-grid.lg{grid-template-columns:repeat(2,1fr);}
-.img-wrap{position:relative;border-radius:8px;overflow:hidden;background:var(--tag);aspect-ratio:1;}
-.img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.img-wrap{border-radius:8px;overflow:hidden;background:var(--tag);
+  display:flex;flex-direction:column;}
+.img-thumb{position:relative;aspect-ratio:1;}
+.img-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .img-del{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;
   border-radius:50%;width:22px;height:22px;color:#fff;font-size:11px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;}
+.img-comment{width:100%;background:#1a2333;border:none;border-top:1px solid var(--border);
+  color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:11px;
+  padding:5px 7px;resize:none;outline:none;line-height:1.5;min-height:32px;}
+.img-comment::placeholder{color:var(--muted);}
 .add-photo{border-radius:8px;border:2px dashed var(--border);background:transparent;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:4px;color:var(--muted);font-size:11px;cursor:pointer;aspect-ratio:1;}
@@ -862,10 +869,24 @@ function renderPhotos(ag, grid){
   (ag.images||[]).forEach(function(p, i){
     var wrap = document.createElement('div');
     wrap.className = 'img-wrap';
-    var delId = ag.id;
-    wrap.innerHTML =
+    // サムネイル部分
+    var thumb = document.createElement('div');
+    thumb.className = 'img-thumb';
+    thumb.innerHTML =
       '<img src="'+getPhotoSrc(p)+'">'+
       '<button class="img-del" onclick="removePhoto('+ag.id+','+i+')">✕</button>';
+    wrap.appendChild(thumb);
+    // コメント欄
+    var ta = document.createElement('textarea');
+    ta.className = 'img-comment';
+    ta.placeholder = 'コメント…';
+    ta.value = p.comment || '';
+    ta.rows = 2;
+    ta.addEventListener('input', function(){
+      ag.images[i].comment = ta.value;
+      saveDB();
+    });
+    wrap.appendChild(ta);
     grid.appendChild(wrap);
   });
 }
