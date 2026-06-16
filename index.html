@@ -614,6 +614,25 @@ function addAgenda(){
     blocks.lastElementChild && blocks.lastElementChild.scrollIntoView({behavior:'smooth', block:'start'});
   }, 80);
 }
+function moveAgenda(aid, dir){
+  if(!currentId) return;
+  var m = getM(currentId); if(!m) return;
+  var idx = m.agendas.findIndex(function(a){return a.id===aid;});
+  if(idx<0) return;
+  var newIdx = idx+dir;
+  if(newIdx<0||newIdx>=m.agendas.length) return;
+  // 入れ替え
+  var tmp = m.agendas[idx];
+  m.agendas[idx] = m.agendas[newIdx];
+  m.agendas[newIdx] = tmp;
+  saveDB();
+  renderAgendaBlocks();
+  // 移動後のブロックにスクロール
+  setTimeout(function(){
+    var el = document.getElementById('ab-'+aid);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 80);
+}
 function removeAgenda(aid){
   if(!currentId) return;
   if(!confirm('この議題（決定事項・アクション・画像を含む）を削除しますか？')) return;
@@ -639,10 +658,23 @@ function renderAgendaBlocks(){
     // ── ヘッダー（議題入力）──
     var hdr = document.createElement('div');
     hdr.className = 'agenda-block-hdr';
+    var isFirst = idx===0, isLast = idx===m.agendas.length-1;
     hdr.innerHTML =
       '<span class="agenda-num">'+String(idx+1).padStart(2,'0')+'</span>'+
       '<input class="agenda-input" placeholder="議題を入力…" value="'+escAttr(ag.text)+'">'+
-      '<button class="agenda-del" onclick="removeAgenda('+ag.id+')">🗑</button>';
+      '<div style="display:flex;gap:3px;flex-shrink:0;">'+
+        '<button onclick="moveAgenda('+ag.id+',-1)" style="'+
+          'width:26px;height:26px;border-radius:6px;border:1px solid var(--border);'+
+          'background:var(--card2);color:'+(isFirst?'var(--border)':'var(--muted)')+';'+
+          'font-size:13px;cursor:'+(isFirst?'default':'pointer')+';line-height:1;'+
+          'display:flex;align-items:center;justify-content:center;"'+(isFirst?' disabled':'')+'>↑</button>'+
+        '<button onclick="moveAgenda('+ag.id+',1)" style="'+
+          'width:26px;height:26px;border-radius:6px;border:1px solid var(--border);'+
+          'background:var(--card2);color:'+(isLast?'var(--border)':'var(--muted)')+';'+
+          'font-size:13px;cursor:'+(isLast?'default':'pointer')+';line-height:1;'+
+          'display:flex;align-items:center;justify-content:center;"'+(isLast?' disabled':'')+'>↓</button>'+
+        '<button class="agenda-del" onclick="removeAgenda('+ag.id+')">🗑</button>'+
+      '</div>';
     hdr.querySelector('input').addEventListener('input', function(e){
       ag.text = e.target.value; saveDB();
     });
@@ -1126,24 +1158,18 @@ function buildPrintHtmlOne(m){
       h+='</table></div>';
     }
     if(ag.images&&ag.images.length){
-      h+='<div style="padding:6px 10px;">';
+      h+='<div style="padding:6px 10px;page-break-inside:avoid;">';
       h+='<div style="font-size:9px;color:#0e7490;font-weight:700;margin-bottom:4px;">🖼 画像（'+ag.images.length+'枚）</div>';
-      h+='<table style="width:100%;border-collapse:collapse;table-layout:fixed;">';
-      for(var r=0;r<Math.ceil(ag.images.length/3);r++){
-        h+='<tr>';
-        for(var c=0;c<3;c++){
-          var pi=r*3+c;
-          if(pi<ag.images.length){
-            h+='<td style="width:33.3%;padding:2px;vertical-align:top;">';
-            h+='<img src="'+getPhotoSrc(ag.images[pi])+'" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;border:1px solid #dde3ec;display:block;">';
-            h+='</td>';
-          } else {
-            h+='<td style="width:33.3%;padding:2px;"></td>';
-          }
+      // 1枚ずつ縦に並べる（途中で切れない・コメント付き）
+      ag.images.forEach(function(p,pi){
+        h+='<div style="page-break-inside:avoid;margin-bottom:8px;">';
+        h+='<img src="'+getPhotoSrc(p)+'" style="width:100%;max-height:200px;object-fit:contain;border-radius:3px;border:1px solid #dde3ec;display:block;background:#f8fafc;">';
+        if(p.comment){
+          h+='<div style="font-size:9px;color:#334155;background:#f0f4f8;padding:3px 6px;border:1px solid #dde3ec;border-top:none;border-radius:0 0 3px 3px;line-height:1.5;">'+escH(p.comment)+'</div>';
         }
-        h+='</tr>';
-      }
-      h+='</table></div>';
+        h+='</div>';
+      });
+      h+='</div>';
     }
     h+='</div>';
   });
