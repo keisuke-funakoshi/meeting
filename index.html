@@ -1160,15 +1160,16 @@ function buildPrintHtmlOne(m){
     if(ag.images&&ag.images.length){
       h+='<div style="padding:6px 10px;">';
       h+='<div style="font-size:9px;color:#0e7490;font-weight:700;margin-bottom:6px;">🖼 画像（'+ag.images.length+'枚）</div>';
-      // 2列グリッド・ペア単位でpage-break-inside:avoid
+      // 2列・縦横比維持・見切れなし
       for(var pi=0;pi<ag.images.length;pi+=2){
-        h+='<div style="display:flex;gap:6px;margin-bottom:6px;page-break-inside:avoid;">';
+        h+='<div style="display:flex;gap:6px;margin-bottom:8px;page-break-inside:avoid;align-items:flex-start;">';
         for(var ci=0;ci<2;ci++){
           var idx2=pi+ci;
           if(idx2<ag.images.length){
             var p2=ag.images[idx2];
             h+='<div style="flex:1;min-width:0;">';
-            h+='<img src="'+getPhotoSrc(p2)+'" style="width:100%;height:120px;object-fit:cover;border-radius:3px;border:1px solid #dde3ec;display:block;">';
+            // 縦横比そのまま・はみ出しなし
+            h+='<img src="'+getPhotoSrc(p2)+'" style="width:100%;height:auto;max-width:100%;display:block;border-radius:3px;border:1px solid #dde3ec;">';
             if(p2.comment){
               h+='<div style="font-size:8px;color:#334155;background:#f0f4f8;padding:3px 5px;border:1px solid #dde3ec;border-top:none;border-radius:0 0 3px 3px;line-height:1.5;word-break:break-all;">'+escH(p2.comment)+'</div>';
             }
